@@ -34,13 +34,22 @@ const userSchema = new mongoose.Schema({
     profilePic: {
         type: Buffer
     },
+    role: {
+        type: String,
+        required: true,
+        enum: ["student", "teacher", "staff", "manager"],
+    },
     tokens: [{
         token: {
             type: String,
             required: true
         }
     }]
-}
+},
+    {
+        discriminatorKey: "role",
+        timestamps: true
+    }
 )
 
 

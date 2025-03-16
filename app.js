@@ -1,10 +1,11 @@
 const express = require('express')
 const InitiateMongoServer = require('./configs/db')
-const dotenv = require('dotenv').config()
-const User = require('./models/user')
+const routes = require('./routes')
+
+require('dotenv').config()
+
 const app = express()
-const mongoose = require('mongoose')
-const userRoutes = require('./routes/user')
+
 
 const host = process.env.APP_HOST || "localhost"
 const port = process.env.APP_PORT || 3000
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
     next()
 })
 
-app.use("/", userRoutes)
+app.use(routes)
 
 app.get("/", (req, res) => {
     res.send(
