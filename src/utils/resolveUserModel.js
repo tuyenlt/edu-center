@@ -2,7 +2,7 @@ const User = require('../models/user.model')
 const Student = require('../models/student.model')
 const Teacher = require('../models/teacher.model')
 
-const getModelByRole = (role) => {
+const resolveUserModel = (role) => {
     if (role === "student") {
         return Student
     }
@@ -14,4 +14,4 @@ const getModelByRole = (role) => {
     return User
 }
 
-module.exports = getModelByRole
+module.exports = resolveUserModel

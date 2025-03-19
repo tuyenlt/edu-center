@@ -45,3 +45,4 @@ coverage/
 *.bak
 *.cache
 .nyc_output/
+rest.http

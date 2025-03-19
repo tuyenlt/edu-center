@@ -4,6 +4,7 @@ const dotenv = require('dotenv').config()
 const { DB_USER, DB_PASSWORD, DB_APP } = process.env
 
 const uri = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@edu-center.list9.mongodb.net/edu-data?retryWrites=true&w=majority&appName=${DB_APP}`
+// const localUri = "mongodb://localhost:27017"
 
 const clientOptions = {
     serverApi: {

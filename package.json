@@ -1,11 +1,11 @@
 {
   "name": "edu-center",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "nodemon  app.js"
+    "start": "node src/app.js",
+    "dev": "nodemon  src/app.js"
   },
   "author": "tuyenlt",
   "license": "ISC",
@@ -14,8 +14,10 @@
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
+    "redis": "^4.7.0",
     "validator": "^13.12.0"
   }
 }

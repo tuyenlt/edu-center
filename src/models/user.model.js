@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
-const dotenv = require('dotenv').config()
-const jwt = require('jsonwebtoken')
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -25,13 +23,22 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
+    phone_number: {
+        type: String,
+        validate(value) {
+            if (value.length != 10) {
+                throw new Error("Wrong phone number format")
+            }
+        }
+    }
+    ,
     password: {
         type: String,
         required: true,
         minlength: 8,
         trim: true
     },
-    profilePic: {
+    profile_img: {
         type: Buffer
     },
     role: {
@@ -39,11 +46,15 @@ const userSchema = new mongoose.Schema({
         required: true,
         enum: ["student", "teacher", "staff", "manager"],
     },
-    tokens: [{
-        token: {
-            type: String,
-            required: true
+    chatrooms: [{
+        chat_id: {
+            type: mongoose.Types.ObjectId,
+            ref: 'chatrooms'
         }
+    }],
+    bills: [{
+        type: mongoose.Types.ObjectId,
+        ref: "bills"
     }]
 },
     {
@@ -63,15 +74,6 @@ userSchema.methods.toJSON = function () {
     return userObject
 }
 
-userSchema.methods.generateJWTAuthToken = async function () {
-    const user = this
-    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET)
-
-    user.tokens = user.tokens.concat({ token })
-    await user.save()
-
-    return token
-}
 
 userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({ email })
