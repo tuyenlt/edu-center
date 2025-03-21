@@ -19,7 +19,7 @@ const studentSchema = new mongoose.Schema({
     }]
 })
 
-const Student = User.discriminator('student', studentSchema)
+const StudentModel = User.discriminator('student', studentSchema)
 
 
-module.exports = Student
+module.exports = StudentModel

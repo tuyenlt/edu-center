@@ -13,16 +13,49 @@ const classController = {
             res.status(500).json({ error: error.message });
         }
     },
-
     getClassById: async (req, res) => {
         try {
-            const classDoc = await ClassModel.findById(req.params.id);
-            if (!classDoc) {
-                return res.status(404).json({ error: "Class not found" });
+            let query = ClassModel.find();
+
+
+            const { populateFields } = req.body;
+
+            if (populateFields?.includes("course_id")) {
+                query = query.populate({
+                    path: "course_id",
+                    select: "name goal course_level"
+                });
             }
-            res.json(classDoc);
+            if (populateFields?.includes("teacher_id")) {
+                query = query.populate({
+                    path: "teacher_id",
+                    select: "name profile_img"
+                });
+            }
+            if (populateFields?.includes("students")) {
+                query = query.populate({
+                    path: "students",
+                    select: "name profile_img"
+                });
+            }
+            if (populateFields?.includes("class_sessions")) {
+                query = query.populate({
+                    path: "class_sessions",
+                    select: "start_time end_time title"
+                });
+            }
+            if (populateFields?.includes("assignments")) {
+                query = query.populate({
+                    path: "assignments",
+                    select: "title due_date max_score"
+                });
+            }
+
+            const classes = await query.exec();
+            res.status(200).json(classes);
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            console.error("Error fetching classes:", error);
+            res.status(500).json({ error: "Internal Server Error" });
         }
     },
 

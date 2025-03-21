@@ -118,6 +118,19 @@ const userController = {
         } catch (error) {
             res.status(500).send(error);
         }
+    },
+    getUserBills: async (req, res) => {
+        try {
+            const user = await User.findById(req.user._id);
+            if (!user) {
+                return res.status(404).send({ error: "User not exists" });
+            }
+            const bills = await user.populate('bills')
+            res.json(bills)
+
+        } catch (error) {
+            res.status(500).send(error)
+        }
     }
 };
 

@@ -23,7 +23,7 @@ const ChatRoomSchema = new mongoose.Schema({
     }],
     type: {
         type: String,
-        reuired: true,
+        required: true,
         enum: ["public", "private"]
     }
 }, {

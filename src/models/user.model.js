@@ -55,7 +55,17 @@ const userSchema = new mongoose.Schema({
     bills: [{
         type: mongoose.Types.ObjectId,
         ref: "bills"
-    }]
+    }],
+    notifies: [{
+        notify_id: {
+            type: mongoose.Types.ObjectId,
+            ref: "notifies"
+        },
+        is_seen: {
+            Boolean
+        }
+    }
+    ]
 },
     {
         discriminatorKey: "role",
