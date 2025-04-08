@@ -3,6 +3,7 @@ const userRoutes = require('./user.route')
 const studentRoutes = require('./student.route')
 const classRoutes = require('./class.route')
 const chatRoutes = require('./chat.route')
+const valkeyClient = require('../configs/valkey')
 
 const router = express.Router()
 

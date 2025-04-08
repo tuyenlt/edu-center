@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('../middlewares/auth');
 const userController = require('../controllers/user.controller');
+const valkeyClient = require('../configs/valkey');
 
 const router = express.Router();
 

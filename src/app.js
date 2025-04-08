@@ -13,6 +13,13 @@ const port = process.env.APP_PORT || 3000
 
 InitiateMongoServer()
 
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    next();
+});
+
 app.use(cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -21,11 +28,6 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser());
-
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`)
-    next()
-})
 
 app.use(routes)
 
@@ -36,7 +38,6 @@ app.get("/", (req, res) => {
 })
 
 
-
-app.listen(port, () => {
-    console.log(`Server is listening on port http://${host}:${port}`)
-})
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is listening on http://${host}:${port}`);
+});

@@ -15,10 +15,15 @@ services:
     logging:
       driver: "json-file"
     environment:
-      VALKEY_HOST: valkey
-      VALKEY_PORT: 6379
-    env_file:
-      - .env
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+      DB_APP: ${DB_APP}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      ACCESS_TOKEN_DURATION: ${ACCESS_TOKEN_DURATION}
+      REFRESH_TOKEN_DURATION: ${REFRESH_TOKEN_DURATION}
+      VALKEY_HOST: ${VALKEY_HOST}
+      VALKEY_PORT: ${VALKEY_PORT}
     command: >
       sh -c "npm install && npm start"
     restart: always

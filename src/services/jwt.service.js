@@ -36,7 +36,7 @@ const generateRefreshToken = async (payload) => {
 
         const token = jwt.sign(payload, secret, { expiresIn });
 
-        await valkeyClient.setEx(payload._id.toString(), durationInSeconds, token);
+        await valkeyClient.set(payload._id.toString(), token, 'EX', durationInSeconds);
 
         return token;
     } catch (error) {
