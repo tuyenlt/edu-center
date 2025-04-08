@@ -4,6 +4,13 @@ const resolveUserModel = require('../utils/resolveUserModel');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../services/jwt.service');
 const valkeyClient = require('../configs/valkey');
 
+const cookieOptions = {
+    httpOnly: true, // Prevent JavaScript access
+    secure: false,   // Use HTTPS (Set to false for local development)
+    // sameSite: "strict", // Prevent CSRF attacks
+    maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
 const userController = {
     login: async (req, res, next) => {
         try {
@@ -20,8 +27,10 @@ const userController = {
             const payload = { _id: user._id, role: user.role };
             const accessToken = await generateAccessToken(payload);
             const refreshToken = await generateRefreshToken(payload);
+            console.log(refreshToken)
+            res.cookie("refreshToken", refreshToken, cookieOptions)
 
-            res.json({ accessToken, refreshToken });
+            res.json({ accessToken });
         } catch (error) {
             next(createError.InternalServerError(error.message || "Something went wrong"));
         }
@@ -29,15 +38,20 @@ const userController = {
 
     refreshToken: async (req, res, next) => {
         try {
-            if (!req.body.refreshToken) throw createError.BadRequest();
+            if (!req.cookies || !req.cookies.refreshToken) {
+                throw createError.Unauthorized();
+            }
 
-            const oldPayload = await verifyRefreshToken(req.body.refreshToken);
+            const oldPayload = await verifyRefreshToken(req.cookies.refreshToken);
             const payload = { _id: oldPayload._id, role: oldPayload.role };
 
             const accessToken = await generateAccessToken(payload);
             const refreshToken = await generateRefreshToken(payload);
 
-            res.json({ accessToken, refreshToken });
+
+            res.cookie("refreshToken", refreshToken, cookieOptions)
+
+            res.json({ accessToken });
         } catch (error) {
             next(error);
         }
@@ -45,16 +59,18 @@ const userController = {
 
     logout: async (req, res, next) => {
         try {
-            const { refreshToken } = req.body;
-            if (!refreshToken) {
-                return res.status(400).json({ error: "Refresh token is required" });
+            if (!req.cookies || !req.cookies.refreshToken) {
+                throw createError.Unauthorized();
             }
-            const payload = await verifyRefreshToken(refreshToken);
+
+            const payload = await verifyRefreshToken(req.cookies.refreshToken);
             if (!payload || !payload._id) {
                 return res.status(403).json({ error: "Invalid refresh token" });
             }
 
             await valkeyClient.del(payload._id);
+
+            res.cookie('refreshToken', "", cookieOptions)
 
             res.json({ message: "Logout successful" });
         } catch (error) {
@@ -101,8 +117,9 @@ const userController = {
             const payload = { _id: user._id, role: user.role };
             const accessToken = await generateAccessToken(payload);
             const refreshToken = await generateRefreshToken(payload);
+            res.cookie('refreshToken', refreshToken, cookieOptions)
             await user.save()
-            res.json({ accessToken, refreshToken });
+            res.json({ accessToken });
         } catch (error) {
             res.status(400).send(error);
         }

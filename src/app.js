@@ -1,8 +1,9 @@
 const express = require('express')
 const InitiateMongoServer = require('./configs/db')
-const routes = require('./routes')
-
+const cors = require('cors')
+const cookieParser = require("cookie-parser");
 require('dotenv').config()
+const routes = require('./routes')
 
 const app = express()
 
@@ -12,8 +13,15 @@ const port = process.env.APP_PORT || 3000
 
 InitiateMongoServer()
 
+app.use(cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true, // Allow cookies & authentication headers
+}));
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser());
+
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`)
     next()

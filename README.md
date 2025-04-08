@@ -27,6 +27,11 @@ Ensure you have the following installed:
    JWT_SECRET=your-secret-key
    JWT_EXPIRED_IN=...
    ```
+   more details in .env.example file
+
+4. Install valkey. Valkey is a fork of Redis that provides similar functionality with potential improvements and modifications. For more information and installation instructions, check out the official Valkey repository: Checkout [valkey repo](https://github.com/valkey-io/valkey) for more informations
+
+   
 
 ## Running the Project
 
@@ -42,6 +47,4 @@ npm start
 npm run dev
 ```
 
-## License
-This project is licensed under the ISC License.
 

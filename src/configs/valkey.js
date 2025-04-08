@@ -1,14 +1,23 @@
-const valkey = require("redis");
+const redis = require('redis');
 
-const client = valkey.createClient({
-    url: "redis://127.0.0.1:6379", // Update if needed
+const valkeyHost = process.env.VALKEY_HOST || '127.0.0.1';
+const valkeyPort = process.env.VALKEY_PORT || 6379;
+
+const client = redis.createClient({
+    socket: {
+        host: valkeyHost,
+        port: valkeyPort,
+    },
 });
 
-client.on("connect", () => console.log("Connected to Valkey"));
-client.on("error", (err) => console.error("Valkey error:", err));
+client.connect();
 
-(async () => {
-    await client.connect(); // Ensure the client is connected
-})();
+client.on('connect', () => {
+    console.log(`Connected to Valkey at ${valkeyHost}:${valkeyPort}`);
+});
+
+client.on('error', (err) => {
+    console.error('Error connecting to Valkey:', err);
+});
 
 module.exports = client;

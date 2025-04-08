@@ -1,0 +1,26 @@
+# Ignore node_modules (installed locally, no need in the image)
+node_modules
+
+# Ignore logs
+*.log
+
+# Ignore environment files (security risk)
+.env
+.env.local
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore Docker-related files
+.dockerignore
+Dockerfile
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# Ignore OS/system files
+.DS_Store
+Thumbs.db
