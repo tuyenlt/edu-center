@@ -1,50 +1,63 @@
-# Edu Center
+# 🚀 Project Setup Guide
 
-A Node.js-based project using Express and MongoDB.
-
-## Prerequisites
-
-Ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (LTS recommended)
-- [MongoDB](https://www.mongodb.com/)
-
-## Installation
-
-1. Clone the repository:
-   ```sh
-   git clone <repository-url>
-   cd edu-center
-   ```
-
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory and configure the necessary environment variables:
-   ```sh
-   # Example .env file
-   JWT_SECRET=your-secret-key
-   JWT_EXPIRED_IN=...
-   ```
-   more details in .env.example file
-
-4. Install valkey. Valkey is a fork of Redis that provides similar functionality with potential improvements and modifications. For more information and installation instructions, check out the official Valkey repository: Checkout [valkey repo](https://github.com/valkey-io/valkey) for more informations
-
-   
-
-## Running the Project
-
-### Start the application
-
-#### Production Mode:
+## 1. **Clone the Repository**
 ```sh
-npm start
+git clone <repository-url>
+cd edu-center
 ```
 
-#### Development Mode (with auto-reload):
+## 2. **Install Dependencies**
+```sh
+npm install
+```
+
+## 3. **Set Up Environment Variables**
+- Create a `.env` file in the root directory.
+- Use the `.env.example` file as a reference:
+
+```env
+DB_USER=
+DB_PASSWORD=
+DB_APP=
+ACCESS_TOKEN_SECRET=
+REFRESH_TOKEN_SECRET=
+ACCESS_TOKEN_DURATION=
+REFRESH_TOKEN_DURATION=
+VALKEY_HOST=valkey
+VALKEY_PORT=6379
+```
+
+## 4. **Set Up MongoDB**
+Ensure MongoDB is running locally **or** provide a valid connection string in the `.env` file.
+
+## 5. **Set Up Valkey**
+Valkey is a Redis-compatible caching service.  
+For installation instructions, check the [Valkey GitHub repository](https://github.com/valkey-io/valkey).
+
+---
+
+# Running the Project
+
+### Development Mode (with auto-reload)
 ```sh
 npm run dev
 ```
 
+### Production Mode
+```sh
+npm start
+```
 
+---
+
+# Using Docker
+
+### 1. **Build and Start Containers**
+```sh
+docker-compose up --build
+```
+
+### 2. **Stop Containers**
+```sh
+docker-compose down
+```
