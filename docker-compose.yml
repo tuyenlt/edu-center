@@ -26,6 +26,8 @@ services:
       VALKEY_PORT: ${VALKEY_PORT}
     command: >
       sh -c "npm install && npm start"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: always
 
   valkey:

@@ -6,11 +6,11 @@ const valkeyClient = require('../configs/valkey');
 const router = express.Router();
 
 router.post("/users", userController.registerUser);
-router.patch("/users", auth, userController.updateUser);
 router.post("/users/login", userController.login);
+router.patch("/users", auth, userController.updateUser);
 router.delete("/users/me", auth, userController.deleteUser);
 router.get("/users/me", auth, userController.getUserProfile);
-router.post("/users/refresh-token", userController.refreshToken);
 router.delete("/users/logout", auth, userController.logout);
+router.post("/users/refresh-token", userController.refreshToken);
 
 module.exports = router;
