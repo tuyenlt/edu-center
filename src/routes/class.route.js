@@ -7,6 +7,7 @@ const assignmentController = require('../controllers/assignment.controller');
 const router = express.Router();
 
 router.post("/classes", auth, authorizeRole(["manager"]), classController.createClass)
+router.get("/classes", auth, classController.getAllClasses)
 router.get("/classes/:id", auth, classController.getClassById)
 router.patch("/classes/:id", auth, authorizeRole(["manager"]), classController.updateClass)
 router.post("/classes/:id/add-session", auth, authorizeRole(["manager"]), classController.addSession)

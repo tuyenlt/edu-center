@@ -10,7 +10,6 @@ const classSessionSchema = new mongoose.Schema({
     teacher_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'teachers',
-        required: true
     },
     start_time: {
         type: Date,

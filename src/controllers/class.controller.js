@@ -13,6 +13,14 @@ const classController = {
             res.status(500).json({ error: error.message });
         }
     },
+    getAllClasses: async (req, res) => {
+        try {
+            const classes = await ClassModel.find();
+            res.status(200).json(classes);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
     getClassById: async (req, res) => {
         try {
             let query = ClassModel.find();
