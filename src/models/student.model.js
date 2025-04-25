@@ -16,7 +16,17 @@ const studentSchema = new mongoose.Schema({
     assignments: [{
         type: mongoose.Types.ObjectId,
         ref: "assignments"
-    }]
+    }],
+    personal_info: {
+        dob: {
+            type: Date,
+            required: true
+        },
+        address: {
+            type: String,
+            required: true
+        },
+    }
 })
 
 const StudentModel = User.discriminator('student', studentSchema)

@@ -7,10 +7,6 @@ const teacherSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    tax_number: {
-        type: String,
-        required: true,
-    },
     unpaid_lecture: {
         type: Number
     },
@@ -22,6 +18,35 @@ const teacherSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'class_sessions'
     }],
+    personal_info: {
+        dob: {
+            type: Date,
+            required: true
+        },
+        address: {
+            type: String,
+            required: true
+        },
+        tax_number: {
+            type: String,
+            required: true
+        },
+        payment_info: {
+            bank_account: {
+                type: String,
+                required: true
+            },
+            bank_name: {
+                type: String,
+                required: true
+            },
+            account_holder_name: {
+                type: String,
+                required: true
+            }
+        }
+
+    }
 });
 
 const Teacher = User.discriminator('teacher', teacherSchema);

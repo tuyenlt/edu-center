@@ -7,6 +7,11 @@ const classSessionSchema = new mongoose.Schema({
         ref: 'classes',
         required: true
     },
+    room: {
+        type: String,
+        required: true,
+    }
+    ,
     teacher_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'teachers',
@@ -19,7 +24,7 @@ const classSessionSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    topic: {
+    type: {
         type: String,
         required: true
     },

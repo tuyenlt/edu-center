@@ -9,7 +9,8 @@ const classSchema = new mongoose.Schema({
     },
     class_code: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     course_id: {
         type: mongoose.Types.ObjectId,

@@ -77,6 +77,17 @@ const userController = {
             next(error);
         }
     },
+    getMe: async (req, res) => {
+        try {
+            const user = await User.findById(req.user._id);
+            if (!user) {
+                return res.status(404).send({ error: "User not exists" });
+            }
+            res.json(user);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    },
     updateUser: async (req, res) => {
         try {
             const updateFields = Object.keys(req.body);
@@ -124,18 +135,6 @@ const userController = {
             res.status(400).send(error);
         }
     },
-
-    getUserProfile: async (req, res) => {
-        try {
-            const user = await User.findById(req.user._id);
-            if (!user) {
-                return res.status(404).send({ error: "User not exists" });
-            }
-            res.json(user);
-        } catch (error) {
-            res.status(500).send(error);
-        }
-    },
     getUserBills: async (req, res) => {
         try {
             const user = await User.findById(req.user._id);
@@ -145,6 +144,22 @@ const userController = {
             const bills = await user.populate('bills')
             res.json(bills)
 
+        } catch (error) {
+            res.status(500).send(error)
+        }
+    },
+    getUserProfileByID: async (req, res) => {
+        try {
+            const userId = req.params.id;
+            if (!userId) {
+                return res.status(400).send({ error: "User ID is required" });
+            }
+            const user = await User.findById(userId);
+
+            if (!user) {
+                return res.status(404).send({ error: "User not exists" });
+            }
+            res.json(user);
         } catch (error) {
             res.status(500).send(error)
         }

@@ -23,7 +23,7 @@ const classController = {
     },
     getClassById: async (req, res) => {
         try {
-            let query = ClassModel.find();
+            let query = ClassModel.findById(req.params.id);
 
 
             const { populateFields } = req.body;
@@ -43,7 +43,7 @@ const classController = {
             if (populateFields?.includes("students")) {
                 query = query.populate({
                     path: "students",
-                    select: "name profile_img"
+                    select: "_id name"
                 });
             }
             if (populateFields?.includes("class_sessions")) {
@@ -185,9 +185,21 @@ const classController = {
             console.error(error);
             res.status(500).json({ message: "An error occurred while leaving the class" });
         }
+    },
+    deleteClass: async (req, res) => {
+        try {
+            const classDoc = await ClassModel.findById(req.params.id);
+            if (!classDoc) {
+                return res.status(404).json({ message: "Class not found" });
+            }
+
+            await classDoc.deleteOne();
+            res.json({ message: "Class deleted successfully" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "An error occurred while deleting the class" });
+        }
     }
-
-
 };
 
 module.exports = classController;
