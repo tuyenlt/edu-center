@@ -38,8 +38,8 @@ const userSchema = new mongoose.Schema({
         minlength: 8,
         trim: true
     },
-    profile_img: {
-        type: Buffer
+    avatar_url: {
+        type: String
     },
     role: {
         type: String,

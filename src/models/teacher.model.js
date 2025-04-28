@@ -31,22 +31,22 @@ const teacherSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        payment_info: {
-            bank_account: {
-                type: String,
-                required: true
-            },
-            bank_name: {
-                type: String,
-                required: true
-            },
-            account_holder_name: {
-                type: String,
-                required: true
-            }
+    },
+    payment_info: {
+        bank_account: {
+            type: String,
+            required: true
+        },
+        bank_name: {
+            type: String,
+            required: true
+        },
+        account_holder_name: {
+            type: String,
+            required: true
         }
-
     }
+
 });
 
 const Teacher = User.discriminator('teacher', teacherSchema);

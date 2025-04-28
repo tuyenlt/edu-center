@@ -13,6 +13,10 @@ const CourseSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    img_url: {
+        type: String,
+        required: true
+    },
     sessions_details: [{
         title: {
             type: String,
@@ -25,13 +29,17 @@ const CourseSchema = new mongoose.Schema({
             type: String,
         }
     }],
+    requested_students: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'students'
+    }],
     tags: [{
         type: String,
     }],
     price: {
         type: Number,
         required: true
-    }
+    },
 }, {
     timestamps: true,
     collection: 'courses'

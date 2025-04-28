@@ -19,6 +19,14 @@ const studentController = {
         } catch (error) {
             res.status(500).json({ error: error })
         }
+    },
+    getAllStudents: async (req, res) => {
+        try {
+            const students = await StudentModel.find().populate('enrolled_classes', 'name')
+            res.json(students)
+        } catch (error) {
+            res.status(500).json({ error: error })
+        }
     }
 }
 

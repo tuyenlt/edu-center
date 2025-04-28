@@ -49,10 +49,11 @@ const generateRefreshToken = async (payload) => {
 const verifyRefreshToken = async (refreshToken) => {
     try {
         const secret = process.env.REFRESH_TOKEN_SECRET || 'defaultRefreshTokenSecret';
-
         const payload = jwt.verify(refreshToken, secret);
 
-        const storedToken = await valkeyClient.get(payload._id);
+        const storedToken = await valkeyClient.get(payload._id.toString());
+        console.log(refreshToken)
+        console.log(storedToken)
 
         if (!storedToken || storedToken !== refreshToken) {
             throw createError.Unauthorized('Refresh token expired or invalid');

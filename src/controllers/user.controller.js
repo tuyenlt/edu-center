@@ -91,7 +91,7 @@ const userController = {
     updateUser: async (req, res) => {
         try {
             const updateFields = Object.keys(req.body);
-            const allowedUpdateFields = ["name", "email", "password", "profilePic"];
+            const allowedUpdateFields = ["name", "email", "password", "avatar_url"];
             const isValidOperation = updateFields.every(field => allowedUpdateFields.includes(field));
 
             if (!isValidOperation) {

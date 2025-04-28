@@ -18,14 +18,16 @@ const studentSchema = new mongoose.Schema({
         ref: "assignments"
     }],
     personal_info: {
-        dob: {
-            type: Date,
-            required: true
-        },
-        address: {
-            type: String,
-            required: true
-        },
+        type: {
+            dob: {
+                type: Date,
+                required: true
+            },
+            address: {
+                type: String,
+                required: true
+            },
+        }
     }
 })
 
