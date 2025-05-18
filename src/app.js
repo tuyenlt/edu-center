@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 app.use(cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    credentials: true, // Allow cookies & authentication headers
+    credentials: true,
 }));
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

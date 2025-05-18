@@ -1,5 +1,33 @@
 const mongoose = require('mongoose')
 
+const SessionSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    sessions: [
+        {
+            title: {
+                type: String,
+                required: true
+            },
+            description: {
+                type: String,
+                required: true
+            },
+            type: {
+                type: String,
+                required: true,
+                enum: ['listening', 'reading', 'writing', 'speaking', 'grammar', 'vocabulary', 'exams']
+            },
+        }
+    ]
+})
+
 const CourseSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -17,18 +45,12 @@ const CourseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    sessions_details: [{
-        title: {
-            type: String,
+    sessions_details: [
+        {
+            type: SessionSchema,
             required: true
-        },
-        description: {
-            type: String,
-        },
-        type: {
-            type: String,
         }
-    }],
+    ],
     requested_students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'students'
@@ -48,3 +70,5 @@ const CourseSchema = new mongoose.Schema({
 const CourseModel = mongoose.model('courses', CourseSchema)
 
 module.exports = CourseModel
+
+

@@ -1,4 +1,3 @@
-const createError = require('http-errors');
 const User = require('../models/user.model');
 const resolveUserModel = require('../utils/resolveUserModel');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../services/jwt.service');
@@ -12,34 +11,35 @@ const cookieOptions = {
 };
 
 const userController = {
-    login: async (req, res, next) => {
+    login: async (req, res) => {
         try {
             const { email, password } = req.body;
             if (!email || !password) {
-                return next(createError.BadRequest("Email and password are required"));
+                return res.status(400).json({ error: "Email and password are required" });
             }
 
             const user = await User.findByCredentials(email, password);
             if (!user) {
-                return next(createError.Unauthorized("Invalid email or password"));
+                return res.status(401).json({ error: "Invalid credentials" });
             }
 
             const payload = { _id: user._id, role: user.role };
             const accessToken = await generateAccessToken(payload);
             const refreshToken = await generateRefreshToken(payload);
-            console.log(refreshToken)
+
             res.cookie("refreshToken", refreshToken, cookieOptions)
 
             res.json({ accessToken });
         } catch (error) {
-            next(createError.InternalServerError(error.message || "Something went wrong"));
+            console.error("Login error:", error);
+            res.status(500).json({ error: "Internal server error" });
         }
     },
 
-    refreshToken: async (req, res, next) => {
+    refreshToken: async (req, res) => {
         try {
             if (!req.cookies || !req.cookies.refreshToken) {
-                throw createError.Unauthorized();
+                return res.status(401).json({ error: "Unauthorized" });
             }
 
             const oldPayload = await verifyRefreshToken(req.cookies.refreshToken);
@@ -53,14 +53,21 @@ const userController = {
 
             res.json({ accessToken });
         } catch (error) {
-            next(error);
+            console.error("Refresh token error:", error);
+            if (error.name === "TokenExpiredError") {
+                return res.status(401).json({ error: "Refresh token expired" });
+            }
+            if (error.name === "JsonWebTokenError") {
+                return res.status(403).json({ error: "Invalid refresh token" });
+            }
+            res.status(500).json({ error: "Internal server error" });
         }
     },
 
-    logout: async (req, res, next) => {
+    logout: async (req, res) => {
         try {
             if (!req.cookies || !req.cookies.refreshToken) {
-                throw createError.Unauthorized();
+                return res.status(401).json({ error: "Unauthorized" });
             }
 
             const payload = await verifyRefreshToken(req.cookies.refreshToken);
@@ -74,7 +81,7 @@ const userController = {
 
             res.json({ message: "Logout successful" });
         } catch (error) {
-            next(error);
+            res.status(500).json({ error: "Internal server error" });
         }
     },
     getMe: async (req, res) => {

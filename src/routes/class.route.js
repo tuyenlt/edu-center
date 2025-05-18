@@ -13,6 +13,8 @@ router.patch("/classes/:id", auth, authorizeRole(["manager"]), classController.u
 router.post("/classes/:id/add-session", auth, authorizeRole(["manager"]), classController.addSession)
 router.post("/classes/:id/join", auth, authorizeRole(['teacher', 'student']), classController.joinClass)
 router.delete("/classes/:id/leave", auth, authorizeRole(['teacher', 'student']), classController.leaveClass)
+router.post("/classes/:id/add-student", auth, authorizeRole(['manager']), classController.addStudent)
 router.post("/classes/:id/add-assignment", auth, authorizeRole(['teacher']), assignmentController.addAssignment)
+router.delete("/classes/:id", auth, authorizeRole(["manager"]), classController.deleteClass)
 
 module.exports = router;

@@ -7,16 +7,19 @@ const teacherSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    unpaid_lecture: {
-        type: Number
-    },
     assignments: [{
         type: mongoose.Types.ObjectId,
         ref: "assignments"
     }],
     attended_class_sessions: [{
-        type: mongoose.Types.ObjectId,
-        ref: 'class_sessions'
+        class_session: {
+            type: mongoose.Types.ObjectId,
+            ref: 'class_sessions'
+        },
+        is_paid: {
+            type: Boolean,
+            default: false
+        },
     }],
     personal_info: {
         dob: {
@@ -28,6 +31,10 @@ const teacherSchema = new mongoose.Schema({
             required: true
         },
         tax_number: {
+            type: String,
+            required: true
+        },
+        id_card: {
             type: String,
             required: true
         },

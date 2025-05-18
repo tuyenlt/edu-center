@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const ChatroomModel = require('./chatroom.model')
 const AssignmentModel = require('./assignments.model')
+const ClassPost = require('./classPost.model')
 
 const classSchema = new mongoose.Schema({
     class_name: {
@@ -18,10 +19,10 @@ const classSchema = new mongoose.Schema({
         ref: "courses"
     }
     ,
-    teacher_id: {
+    teachers: [{
         type: mongoose.Types.ObjectId,
         ref: 'teacher'
-    },
+    }],
     max_students: {
         type: Number,
         required: true,
@@ -47,12 +48,12 @@ const classSchema = new mongoose.Schema({
     }],
     status: {
         type: String,
-        enum: ['pending', 'ongoing', 'finished'],
+        enum: ['pending', 'scheduling', 'ongoing', 'finished'],
         require: true
     },
     assignments: [{
         type: mongoose.Types.ObjectId,
-        ref: 'assignment'
+        ref: 'assignments'
     }]
 }, {
     timestamps: true,
@@ -65,6 +66,7 @@ classSchema.pre('deleteOne', async function (next) {
     }
     await ChatroomModel.deleteOne({ _id: this.chat_id })
     await AssignmentModel.deleteMany({ class_id: this.id })
+    await ClassPost.deleteMany({ classId: this.id })
     next()
 })
 

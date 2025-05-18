@@ -31,6 +31,28 @@ const studentSchema = new mongoose.Schema({
     }
 })
 
+studentSchema.method.addClass = async function (classId) {
+    try {
+        const classToAdd = await ClassModel.findById(classId)
+        if (!classToAdd) {
+            throw new Error('Class not found')
+        }
+
+        if (this.enrolled_classes.includes(classId)) {
+            throw new Error('Already enrolled in this class')
+        }
+        this.outstanding_fees += classToAdd.populate('course_id').price
+        this.enrolled_classes.push(classId)
+        classToAdd.students.push(this._id)
+        await classToAdd.save()
+        await this.save()
+        next()
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+
+
 const StudentModel = User.discriminator('student', studentSchema)
 
 

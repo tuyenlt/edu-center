@@ -2,6 +2,14 @@ const mongoose = require('mongoose');
 const ClassModel = require('./class.model');
 
 const classSessionSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
     class_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'classes',
