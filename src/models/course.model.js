@@ -53,7 +53,7 @@ const CourseSchema = new mongoose.Schema({
     ],
     requested_students: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'students'
+        ref: 'student'
     }],
     tags: [{
         type: String,

@@ -24,14 +24,24 @@ const chatController = {
             if (!req.body.name) {
                 throw new Error('Chat room name is missing')
             }
+            if (req.body.type === "student-contacting") {
+                const studentContactingChatroom = await Chatroom.findOne({ type: "student-contacting", owner: req.user._id });
+                if (studentContactingChatroom) {
+                    return res.status(200).json(studentContactingChatroom);
+                }
+            }
             const chatroom = new Chatroom({
-                name: req.body.name,
-                owner_id: req.user._id,
+                owner: req.user._id,
                 members: [
                     req.user._id,
-                ]
+                ],
+                ...req.body
             })
             await chatroom.save()
+
+            const user = await User.findById(req.user._id);
+            user.chatrooms.push(chatroom._id);
+            await user.save();
             return res.send(chatroom)
         } catch (e) {
             res.status(500).send(e.message)
@@ -107,9 +117,9 @@ const chatController = {
                 id => id.toString() !== req.user._id.toString()
             );
 
-            if (chatroom.owner_id.toString() === req.user._id.toString()) {
+            if (chatroom.owner.toString() === req.user.toString()) {
                 if (chatroom.members.length > 0) {
-                    chatroom.owner_id = chatroom.members[0];
+                    chatroom.owner = chatroom.members[0];
                 } else {
                     await Chatroom.deleteOne({ _id: chatroom._id });
                     return res.json({ message: "Chatroom deleted as last member left" });
@@ -161,6 +171,47 @@ const chatController = {
         } catch (e) {
             console.log(e);
             res.status(500).json({ error: "error getting chat message" })
+        }
+    },
+    getUserChatrooms: async (req, res) => {
+        try {
+            const chatrooms = await User.findById(req.user._id).populate("chatrooms");
+            res.status(200).json(chatrooms.chatrooms);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ error: "error getting chat message" })
+        }
+    },
+    getStudentContacting: async (req, res) => {
+        try {
+            const chatrooms = await Chatroom.find({ type: "student-contacting", taken: false }).populate({
+                path: "owner",
+                select: "name avatar_url"
+            });
+            res.status(200).json(chatrooms);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ error: "error getting chat message" })
+        }
+    },
+    joinStudentContacting: async (req, res) => {
+        try {
+            const chatroom = await validateChatId(req.params.id)
+
+            if (chatroom.taken) {
+                return res.status(403).json({ error: "Already taken" });
+            }
+            const user = await User.findById(req.user._id);
+            chatroom.taken = true;
+            chatroom.members.push(req.user._id);
+            user.chatrooms.push(chatroom._id);
+            await user.save();
+            await chatroom.save()
+
+            res.send("success")
+
+        } catch (e) {
+            res.status(500).send(e.message)
         }
     }
 

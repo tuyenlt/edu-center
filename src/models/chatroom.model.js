@@ -7,7 +7,7 @@ const ChatRoomSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    owner_id: {
+    owner: {
         type: mongoose.Types.ObjectId,
         required: true,
         ref: "users"
@@ -23,8 +23,13 @@ const ChatRoomSchema = new mongoose.Schema({
     }],
     type: {
         type: String,
-        enum: ["public", "private"]
-    }
+        enum: ["class-chat", "student-contacting", "other"]
+    },
+    taken: {
+        type: Boolean,
+        default: false
+    },
+
 }, {
     timestamps: true,
     collection: "chatrooms"

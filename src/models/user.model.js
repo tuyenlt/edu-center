@@ -47,10 +47,8 @@ const userSchema = new mongoose.Schema({
         enum: ["student", "teacher", "staff", "manager"],
     },
     chatrooms: [{
-        chat_id: {
-            type: mongoose.Types.ObjectId,
-            ref: 'chatrooms'
-        }
+        type: mongoose.Types.ObjectId,
+        ref: 'chatrooms'
     }],
     bills: [{
         type: mongoose.Types.ObjectId,
@@ -64,8 +62,11 @@ const userSchema = new mongoose.Schema({
         is_seen: {
             Boolean
         }
+    }],
+    isOnline: {
+        type: Boolean,
+        default: false
     }
-    ]
 },
     {
         discriminatorKey: "role",

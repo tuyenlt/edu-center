@@ -26,9 +26,9 @@ const userController = {
             const payload = { _id: user._id, role: user.role };
             const accessToken = await generateAccessToken(payload);
             const refreshToken = await generateRefreshToken(payload);
-
+            console.log(req.headers);
             res.cookie("refreshToken", refreshToken, cookieOptions)
-
+            // console.log("cookie", res.cookie("refreshToken"));
             res.json({ accessToken });
         } catch (error) {
             console.error("Login error:", error);
@@ -76,11 +76,13 @@ const userController = {
             }
 
             await valkeyClient.del(payload._id);
+            console.log("Deleted refresh token from Valkey");
 
-            res.cookie('refreshToken', "", cookieOptions)
+            res.cookie('refreshToken', '', cookieOptions)
 
             res.json({ message: "Logout successful" });
         } catch (error) {
+            console.error("Logout error:", error);
             res.status(500).json({ error: "Internal server error" });
         }
     },

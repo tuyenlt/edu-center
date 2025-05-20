@@ -27,6 +27,27 @@ const assignmentController = {
         } catch (error) {
             return res.status(500).json({ message: "Something went wrong", error: error.message });
         }
+    },
+    addSubmission: async (req, res) => {
+        try {
+            const assignmentId = req.params.id;
+            const assignment = await AssignmentModel.findById(assignmentId);
+            const learningClass = await ClassModel.findById(assignment.class_id);
+            const student_id = req.user._id;
+            if (!learningClass.students.includes(student_id)) {
+                return res.status(400).json({ error: "not in class" });
+            }
+
+            const submission = req.body.submission;
+
+            assignment.submissions.push(submission);
+            await assignment.save()
+
+            res.status(200).json(assignment);
+
+        } catch (error) {
+            res.status(500).json(error);
+        }
     }
 };
 

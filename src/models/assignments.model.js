@@ -35,13 +35,12 @@ const assignmentSchema = new mongoose.Schema({
         text: {
             type: String
         },
-        file_url: {
+        quiz_answers: [{
             type: String
-        },
-        submitted_at: {
-            type: Date,
-            default: Date.now
-        },
+        }],
+        urls: [{
+            type: String
+        }],
         score: {
             type: Number
         },

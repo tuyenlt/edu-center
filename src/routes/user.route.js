@@ -13,7 +13,7 @@ router.delete("/users/me", auth, userController.deleteUser);
 router.get("/users/me", auth, userController.getMe);
 router.delete("/users/logout", auth, userController.logout);
 router.post("/users/refresh-token", userController.refreshToken);
-router.get("/users/:id", auth, userController.getUserProfileByID);
+router.get("/users/profile/:id", auth, userController.getUserProfileByID);
 router.get("/mail-test", auth, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
