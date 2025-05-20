@@ -52,8 +52,6 @@ const verifyRefreshToken = async (refreshToken) => {
         const payload = jwt.verify(refreshToken, secret);
 
         const storedToken = await valkeyClient.get(payload._id.toString());
-        console.log(refreshToken)
-        console.log(storedToken)
 
         if (!storedToken || storedToken !== refreshToken) {
             throw createError.Unauthorized('Refresh token expired or invalid');
@@ -71,11 +69,20 @@ const verifyRefreshToken = async (refreshToken) => {
     }
 };
 
-
+const verifyAccessToken = (accessToken) => {
+    try {
+        const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        return payload;
+    } catch (error) {
+        console.error("error verify access token:", error);
+        return null;
+    }
+}
 
 
 module.exports = {
     generateAccessToken,
     generateRefreshToken,
-    verifyRefreshToken
+    verifyRefreshToken,
+    verifyAccessToken
 }

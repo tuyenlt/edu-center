@@ -27,10 +27,6 @@ const classSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    current_student: {
-        type: Number,
-        default: 0,
-    },
     chat_id: {
         type: mongoose.Types.ObjectId,
         ref: 'chatrooms'

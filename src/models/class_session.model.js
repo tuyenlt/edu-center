@@ -8,7 +8,17 @@ const classSessionSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
+        default: ''
+    },
+    chapter_index: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    lecture_index: {
+        type: Number,
+        required: true,
+        min: 0
     },
     class_id: {
         type: mongoose.Schema.Types.ObjectId,

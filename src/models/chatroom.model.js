@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const User = require('./user.model')
-const Message = require('./message.model')
+// const Message = require('./message.model')
 
 const ChatRoomSchema = new mongoose.Schema({
     name: {
@@ -23,7 +23,6 @@ const ChatRoomSchema = new mongoose.Schema({
     }],
     type: {
         type: String,
-        required: true,
         enum: ["public", "private"]
     }
 }, {
@@ -31,16 +30,16 @@ const ChatRoomSchema = new mongoose.Schema({
     collection: "chatrooms"
 })
 
-ChatRoomSchema.pre('deleteOne', async function (next) {
-    const users = await User.find({ 'chatrooms.chat_id': this._id })
-    users.forEach(async (user) => {
-        user.chatrooms = user.chatrooms.filter(chat_id => chat_id != this._id)
-        await user.save()
-    })
+// ChatRoomSchema.pre('deleteOne', async function (next) {
+//     const users = await User.find({ 'chatrooms.chat_id': this._id })
+//     users.forEach(async (user) => {
+//         user.chatrooms = user.chatrooms.filter(chat_id => chat_id != this._id)
+//         await user.save()
+//     })
 
-    await Message.deleteMany({ chat_id: this._id })
-    next()
-})
+//     await Message.deleteMany({ chat_id: this._id })
+//     next()
+// })
 
 const Chatroom = mongoose.model("chatrooms", ChatRoomSchema)
 

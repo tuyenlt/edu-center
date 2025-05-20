@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const SessionSchema = new mongoose.Schema({
+const ChapterSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true
@@ -9,7 +9,7 @@ const SessionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    sessions: [
+    lessons: [
         {
             title: {
                 type: String,
@@ -45,9 +45,9 @@ const CourseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    sessions_details: [
+    course_programs: [
         {
-            type: SessionSchema,
+            type: ChapterSchema,
             required: true
         }
     ],

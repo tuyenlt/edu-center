@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
+const Chatroom = require('./chatroom.model')
 
 const MessageSchema = new mongoose.Schema({
-    owner_id: {
+    author: {
         type: mongoose.Types.ObjectId,
         ref: 'users',
         required: true,
@@ -15,15 +16,16 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    reactions: {
-        likes: Number,
-        dislikes: Number,
-        heart: Number,
-    }
-
 }, {
     timestamps: true,
     collection: "messages"
+})
+
+MessageSchema.pre('save', async function (next) {
+    const chatRoom = await Chatroom.findById(this.chat_id);
+    chatRoom.messages.push(this._id);
+    await chatRoom.save();
+    next()
 })
 
 const Message = mongoose.model("messages", MessageSchema)

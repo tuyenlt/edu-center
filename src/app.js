@@ -1,31 +1,33 @@
 const express = require('express')
 const InitiateMongoServer = require('./configs/db')
-const cors = require('cors')
 const cookieParser = require("cookie-parser");
 require('dotenv').config()
 const routes = require('./routes')
 const path = require('path')
+const http = require('http')
+const { Server } = require('socket.io')
+const registerSocket = require('./services/chat.service')
+const { apiCors, socketCors } = require('./configs/corsConfig')
 
 const app = express()
-
+const server = http.createServer(app)
+const io = new Server(server, { cors: socketCors })
 
 const host = process.env.APP_HOST || "localhost"
 const port = process.env.APP_PORT || 3000
 
+registerSocket(io)
 InitiateMongoServer()
 
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
-    // console.log('Headers:', req.headers);
     console.log('Body:', req.body);
     next();
 });
 
-app.use(cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    credentials: true,
-}));
+app.use(apiCors);
+
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser());
@@ -41,6 +43,6 @@ app.get("/", (req, res) => {
 })
 
 
-app.listen(port, '0.0.0.0', () => {
+server.listen(port, '0.0.0.0', () => {
     console.log(`Server is listening on http://${host}:${port}`);
 });

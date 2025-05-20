@@ -14,7 +14,7 @@ const classController = {
         try {
             const newClass = new ClassModel(req.body);
             await newClass.save();
-            res.status(201).json(newClass);
+            res.status(200).json(newClass);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
