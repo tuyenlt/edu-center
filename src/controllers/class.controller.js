@@ -42,56 +42,39 @@ const classController = {
      * @route      GET /classes/:id
      * @access    Authenticated users
      * @role      teacher, student, manager
-     * @description Get a class by ID. populate the class with the following fields:
-     *              - course_id
-     *              - teacher_id
-     *              - students
-     *              - class_sessions
-     *              - assignments
+     *
      * @response    class object. JSON format.
      */
     getClassById: async (req, res) => {
         try {
-            let query = ClassModel.findById(req.params.id);
+            const { id } = req.params;
 
+            let classDoc = await ClassModel.findById(id)
+                .populate({
+                    path: 'course',
+                    select: 'name goal course_level img_url course_programs'
+                })
+                .populate({
+                    path: 'teachers',
+                    select: '_id name avatar_url'
+                })
+                .populate({
+                    path: 'students',
+                    select: '_id name avatar_url'
+                })
+                .populate({
+                    path: 'class_sessions'
+                });
 
-            const { populateFields } = req.body;
+            // const classDoc = await query.exec();
 
-            if (populateFields?.includes("course_id")) {
-                query = query.populate({
-                    path: "course_id",
-                    select: "name goal course_level"
-                });
-            }
-            if (populateFields?.includes("teacher_id")) {
-                query = query.populate({
-                    path: "teacher_id",
-                    select: "name profile_img"
-                });
-            }
-            if (populateFields?.includes("students")) {
-                query = query.populate({
-                    path: "students",
-                    select: "_id name"
-                });
-            }
-            if (populateFields?.includes("class_sessions")) {
-                query = query.populate({
-                    path: "class_sessions",
-                    select: "start_time end_time title"
-                });
-            }
-            if (populateFields?.includes("assignments")) {
-                query = query.populate({
-                    path: "assignments",
-                    select: "title due_date max_score"
-                });
+            if (!classDoc) {
+                return res.status(404).json({ error: "Class not found" });
             }
 
-            const classes = await query.exec();
-            res.status(200).json(classes);
+            res.status(200).json(classDoc);
         } catch (error) {
-            console.error("Error fetching classes:", error);
+            console.error("Error fetching class:", error);
             res.status(500).json({ error: "Internal Server Error" });
         }
     },

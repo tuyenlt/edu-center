@@ -13,7 +13,7 @@ const classSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    course_id: {
+    course: {
         type: mongoose.Types.ObjectId,
         required: true,
         ref: "courses"
@@ -50,7 +50,11 @@ const classSchema = new mongoose.Schema({
     assignments: [{
         type: mongoose.Types.ObjectId,
         ref: 'assignments'
-    }]
+    }],
+    class_posts: [{
+        type: mongoose.Types.ObjectId,
+        ref: 'class_posts'
+    }],
 }, {
     timestamps: true,
     collection: "classes"
