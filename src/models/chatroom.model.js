@@ -11,6 +11,9 @@ const ChatRoomSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: true,
         ref: "users"
+    },
+    avatar_url: {
+        type: String,
     }
     ,
     members: [{
@@ -23,7 +26,7 @@ const ChatRoomSchema = new mongoose.Schema({
     }],
     type: {
         type: String,
-        enum: ["class-chat", "student-contacting", "other"]
+        enum: ["class-chat", "student-contacting", "p2p", "group"],
     },
     taken: {
         type: Boolean,

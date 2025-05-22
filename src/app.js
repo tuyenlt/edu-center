@@ -6,8 +6,8 @@ const routes = require('./routes')
 const path = require('path')
 const http = require('http')
 const { Server } = require('socket.io')
-const registerSocket = require('./services/chat.service')
 const { apiCors, socketCors } = require('./configs/corsConfig')
+const webSocketService = require('./services/webSocket.service')
 
 const app = express()
 const server = http.createServer(app)
@@ -15,8 +15,7 @@ const io = new Server(server, { cors: socketCors })
 
 const host = process.env.APP_HOST || "localhost"
 const port = process.env.APP_PORT || 3000
-
-registerSocket(io)
+webSocketService.register(io)
 InitiateMongoServer()
 
 app.use((req, res, next) => {

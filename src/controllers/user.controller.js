@@ -94,6 +94,7 @@ const userController = {
             }
             res.json(user);
         } catch (error) {
+            console.error("Get user error:", error);
             res.status(500).send(error);
         }
     },
@@ -116,17 +117,33 @@ const userController = {
             await user.save();
             res.send(user);
         } catch (error) {
+            console.error("Update error:", error);
+            res.status(500).send(error);
+        }
+    },
+
+    deleteCurrentUser: async (req, res) => {
+        try {
+            await User.deleteOne({ _id: req.user._id });
+            res.send("Delete success");
+        } catch (error) {
+            console.error("Delete error:", error);
             res.status(500).send(error);
         }
     },
 
     deleteUser: async (req, res) => {
         try {
-            await User.deleteOne({ _id: req.user._id });
-            res.send("Delete success");
+            const userId = req.params.id;
+
+            await User.deleteOne(userId);
+
+            res.json({ "message": "User deleted successfully" });
         } catch (error) {
-            res.status(500).send(error);
+            console.error(error);
+            res.status(500).json({ error: "Internal server error" });
         }
+
     },
 
     registerUser: async (req, res) => {
@@ -141,9 +158,27 @@ const userController = {
             await user.save()
             res.json({ accessToken });
         } catch (error) {
+            console.error("Register error:", error);
             res.status(400).send(error);
         }
     },
+
+    getUsersList: async (req, res) => {
+        try {
+            const userRole = req.query.role;
+            let option = {};
+            if (userRole) {
+                option = { role: userRole }
+            }
+            const usersList = await User.find(option);
+            res.status(200).json(usersList);
+
+        } catch (error) {
+            console.error("Get users list error:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    }
+
     getUserBills: async (req, res) => {
         try {
             const user = await User.findById(req.user._id);
@@ -154,6 +189,7 @@ const userController = {
             res.json(bills)
 
         } catch (error) {
+            console.error("Get user bills error:", error);
             res.status(500).send(error)
         }
     },
@@ -170,6 +206,7 @@ const userController = {
             }
             res.json(user);
         } catch (error) {
+            console.error("Get user profile error:", error);
             res.status(500).send(error)
         }
     },

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const notifySchema = new mongoose.Schema({
-    users_id: [{
+    users: [{
         type: mongoose.Types.ObjectId,
         ref: 'users'
     }],

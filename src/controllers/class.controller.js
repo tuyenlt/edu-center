@@ -182,6 +182,26 @@ const classController = {
             res.status(500).json({ message: "An error occurred while joining the class" });
         }
     },
+    getCurrentUserClasses: async (req, res) => {
+        try {
+            const user = await UserModel.findById(req.user._id);
+            let classes = [];
+
+            if (user.role === 'student') {
+                classes = user.populate({
+                    path: 'enrolled_classes',
+                });
+            } else if (user.role === 'teacher') {
+                classes = user.populate({
+                    path: 'assigned_classes',
+                });
+            }
+            res.status(200).json(classes);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "An error occurred while fetching classes" });
+        }
+    }
     /**
      * @route      DELETE /classes/:id/leave
      * @access    Authenticated users
