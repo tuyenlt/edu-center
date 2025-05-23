@@ -189,37 +189,45 @@ const classController = {
     getCurrentUserClasses: async (req, res) => {
         try {
             const user = await UserModel.findById(req.user._id);
-            let userByRole = [];
+            let userByRole, classes;
 
-            let classes = []
             if (user.role === 'student') {
                 userByRole = await user.populate({
                     path: 'enrolled_classes',
-                    populate: {
-                        path: "teachers",
-                        select: "_id name avatar_url"
-                    },
-                    populate: {
-                        path: 'course',
-                        select: "_id name goal course_level img_url"
-                    }
+                    match: { status: { $ne: 'finished' } },     // filter out finished right here
+                    populate: [
+                        {
+                            path: 'teachers',
+                            select: '_id name avatar_url'
+                        },
+                        {
+                            path: 'course',
+                            select: '_id name goal course_level img_url'
+                        }
+                    ]
+                });
 
-                })
-                classes = userByRole.enrolled_classes.filter(classDoc => classDoc.status !== 'finished');
-            } else if (user.role === 'teacher') {
+                classes = userByRole.enrolled_classes;
+            }
+            else if (user.role === 'teacher') {
                 userByRole = await user.populate({
                     path: 'assigned_classes',
-                    populate: {
-                        path: "teachers",
-                        select: "_id name avatar_url"
-                    },
-                    populate: {
-                        path: 'course',
-                        select: "_id name goal course_level img_url"
-                    }
+                    match: { status: { $ne: 'finished' } },
+                    populate: [
+                        {
+                            path: 'teachers',
+                            select: '_id name avatar_url'
+                        },
+                        {
+                            path: 'course',
+                            select: '_id name goal course_level img_url'
+                        }
+                    ]
                 });
-                classes = userByRole.assigned_classes.filter(classDoc => classDoc.status !== 'finished');
+
+                classes = userByRole.assigned_classes;
             }
+
             if (!classes) {
                 return res.status(404).json({ message: "No classes found" });
             }

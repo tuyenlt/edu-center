@@ -37,16 +37,14 @@ const ChatRoomSchema = new mongoose.Schema({
     collection: "chatrooms"
 })
 
-// ChatRoomSchema.pre('deleteOne', async function (next) {
-//     const users = await User.find({ 'chatrooms.chat_id': this._id })
-//     users.forEach(async (user) => {
-//         user.chatrooms = user.chatrooms.filter(chat_id => chat_id != this._id)
-//         await user.save()
-//     })
-
-//     await Message.deleteMany({ chat_id: this._id })
-//     next()
-// })
+ChatRoomSchema.pre('deleteOne', async function (next) {
+    const users = await User.find({ 'chatrooms._id': this._id })
+    users.forEach(async (user) => {
+        user.chatrooms = user.chatrooms.filter(_id => _id !== this._id)
+        await user.save()
+    })
+    next()
+})
 
 const Chatroom = mongoose.model("chatrooms", ChatRoomSchema)
 

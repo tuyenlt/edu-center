@@ -28,6 +28,13 @@ MessageSchema.pre('save', async function (next) {
     next()
 })
 
+MessageSchema.pre('deleteOne', async function (next) {
+    const chatRoom = await Chatroom.findById(this.chat_id);
+    chatRoom.messages = chatRoom.messages.filter(_id => _id.toString() !== this._id.toString());
+    await chatRoom.save();
+    next()
+})
+
 const Message = mongoose.model("messages", MessageSchema)
 
 module.exports = Message
