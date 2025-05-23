@@ -198,12 +198,13 @@ const classController = {
                     populate: {
                         path: "teachers",
                         select: "_id name avatar_url"
+                    },
+                    populate: {
+                        path: 'course',
+                        select: "_id name goal course_level img_url"
                     }
-                }).then(user => user.populate({
-                    path: 'course',
-                    select: "_id name goal course_level img_url"
+
                 })
-                );
                 classes = userByRole.enrolled_classes.filter(classDoc => classDoc.status !== 'finished');
             } else if (user.role === 'teacher') {
                 userByRole = await user.populate({
@@ -211,12 +212,12 @@ const classController = {
                     populate: {
                         path: "teachers",
                         select: "_id name avatar_url"
+                    },
+                    populate: {
+                        path: 'course',
+                        select: "_id name goal course_level img_url"
                     }
-                }).then(user => user.populate({
-                    path: 'course',
-                    select: "_id name goal course_level img_url"
-                })
-                );
+                });
                 classes = userByRole.assigned_classes.filter(classDoc => classDoc.status !== 'finished');
             }
             if (!classes) {
