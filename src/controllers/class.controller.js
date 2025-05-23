@@ -194,12 +194,20 @@ const classController = {
             let classes = []
             if (user.role === 'student') {
                 userByRole = await user.populate({
-                    path: 'enrolled_classes'
+                    path: 'enrolled_classes',
+                    populate: {
+                        path: "teachers",
+                        select: "_id name avatar_url"
+                    }
                 });
                 classes = userByRole.enrolled_classes.filter(classDoc => classDoc.status !== 'finished');
             } else if (user.role === 'teacher') {
                 userByRole = await user.populate({
                     path: 'assigned_classes',
+                    populate: {
+                        path: "teachers",
+                        select: "_id name avatar_url"
+                    }
                 });
                 classes = userByRole.assigned_classes.filter(classDoc => classDoc.status !== 'finished');
             }
