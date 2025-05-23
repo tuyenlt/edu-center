@@ -2,6 +2,7 @@ const ClassModel = require('../models/class.model');
 const ClassSessionModel = require('../models/class_session.model')
 const UserModel = require('../models/user.model');
 const StudentModel = require('../models/student.model');
+const Teacher = require('../models/teacher.model');
 
 const classController = {
     /**
@@ -32,7 +33,10 @@ const classController = {
      */
     getAllClasses: async (req, res) => {
         try {
-            const classes = await ClassModel.find();
+            const classes = await ClassModel.find().populate({
+                path: "teachers",
+                select: "_id name avatar_url"
+            });
             res.status(200).json(classes);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -185,23 +189,29 @@ const classController = {
     getCurrentUserClasses: async (req, res) => {
         try {
             const user = await UserModel.findById(req.user._id);
-            let classes = [];
+            let userByRole = [];
 
+            let classes = []
             if (user.role === 'student') {
-                classes = user.populate({
-                    path: 'enrolled_classes',
+                userByRole = await user.populate({
+                    path: 'enrolled_classes'
                 });
+                classes = userByRole.enrolled_classes.filter(classDoc => classDoc.status !== 'finished');
             } else if (user.role === 'teacher') {
-                classes = user.populate({
+                userByRole = await user.populate({
                     path: 'assigned_classes',
                 });
+                classes = userByRole.assigned_classes.filter(classDoc => classDoc.status !== 'finished');
+            }
+            if (!classes) {
+                return res.status(404).json({ message: "No classes found" });
             }
             res.status(200).json(classes);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "An error occurred while fetching classes" });
         }
-    }
+    },
     /**
      * @route      DELETE /classes/:id/leave
      * @access    Authenticated users
@@ -272,6 +282,38 @@ const classController = {
             res.status(500).json({ message: "An error occurred while deleting the class" });
         }
     },
+    addTeacher: async (req, res) => {
+        try {
+            const teacher_id = req.body.teacher_id;
+            const class_id = req.params.id;
+            const teacher = await Teacher.findById(teacher_id);
+            teacher.addAssignedClass(class_id);
+            await teacher.save()
+            res.status(200).json("add teacher success");
+        } catch (error) {
+            console.error("error adding teacher to class", error);
+            res.status(500).json("Error adding teacher");
+        }
+    },
+
+    removeTeacher: async (req, res) => {
+        try {
+            const teacher_id = req.body.teacher_id;
+            const class_id = req.params.id;
+            const teacher = await Teacher.findById(teacher_id);
+            teacher.assigned_classes = teacher.assigned_classes.filter((class_id) => class_id.toString() !== req.params.id.toString());
+            await teacher.save();
+            const classDoc = await ClassModel.findById(class_id);
+            classDoc.teachers = classDoc.teachers.filter((teacher_id) => teacher_id.toString() !== req.body.teacher_id.toString());
+            await classDoc.save();
+            res.status(200).json("remove teacher success");
+        } catch (error) {
+            console.error("error removing teacher from class", error);
+            res.status(500).json("Error removing teacher");
+        }
+    },
+
+
     /**
      * @route      POST /classes/:id/add-student
      * @access    Manager
@@ -288,13 +330,14 @@ const classController = {
             const classId = req.params.id;
 
             const classDoc = await ClassModel.findById(classId);
+
             if (!classDoc) {
                 return res.status(404).json({ message: "Class not found" });
             }
 
-            if (classDoc.status !== 'pending' && classDoc.status !== 'scheduling') {
-                return res.status(403).json({ message: "Cannot add students to this class" });
-            }
+            // if (classDoc.status !== 'pending' && classDoc.status !== 'scheduling') {
+            //     return res.status(403).json({ message: "Cannot add students to this class" });
+            // }
 
             const students = req.body.students;
 
@@ -312,6 +355,26 @@ const classController = {
             res.status(500).json({ message: "An error occurred while adding the student" });
         }
     },
+
+    removeStudent: async (req, res) => {
+        try {
+            const student_id = req.body.student_id;
+            const class_id = req.params.id;
+            const student = await StudentModel.findById(student_id);
+            if (!student) {
+                return res.status(404).json({ message: "Student not found" });
+            }
+            student.enrolled_classes = student.enrolled_classes.filter((class_id) => class_id.toString() !== req.params.id.toString());
+            await student.save();
+            const classDoc = await ClassModel.findById(class_id);
+            classDoc.students = classDoc.students.filter((student_id) => student_id.toString() !== req.body.student_id.toString());
+            await classDoc.save();
+            res.status(200).json("remove student success");
+        } catch (error) {
+            console.error("error removing student from class", error);
+            res.status(500).json("Error removing student");
+        }
+    }
 };
 
 module.exports = classController;

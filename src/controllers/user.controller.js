@@ -177,7 +177,7 @@ const userController = {
             console.error("Get users list error:", error);
             res.status(500).json({ error: "Internal server error" });
         }
-    }
+    },
 
     getUserBills: async (req, res) => {
         try {

@@ -1,4 +1,5 @@
 const CourseModel = require('../models/course.model')
+const StudentModel = require('../models/student.model')
 const User = require('../models/user.model')
 
 const courseController = {
@@ -119,6 +120,28 @@ const courseController = {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Server error', error });
+        }
+    },
+    getRequestedStudents: async (req, res) => {
+        try {
+            const classId = req.params.id;
+            const course = await CourseModel.findById(classId).populate({
+                path: "requested_students",
+                select: "_id name email avatar_url"
+            })
+
+            if (!course) {
+                return res.status(404).json({ message: 'Class not found' });
+            }
+
+            if (!course.requested_students.length) {
+                return res.status(404).json({ message: 'No students requested' });
+            }
+
+            return res.status(200).json(course.requested_students);
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({ error: error })
         }
     }
 }

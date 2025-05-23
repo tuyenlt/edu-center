@@ -15,8 +15,15 @@ const BillSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['cash', 'onlineBanking']
-    }
-
+    },
+    course: {
+        type: mongoose.Types.ObjectId,
+        ref: "courses"
+    },
+    sessions: [{
+        type: mongoose.Types.ObjectId,
+        ref: 'class_sessions'
+    }],
 }, {
     timestamps: true,
     collection: 'bills'

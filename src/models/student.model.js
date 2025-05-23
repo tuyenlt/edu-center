@@ -1,6 +1,7 @@
 const User = require('./user.model')
 const mongoose = require('mongoose')
 const ClassModel = require('./class.model')
+const CourseModel = require('./course.model')
 
 const studentSchema = new mongoose.Schema({
     enrolled_classes: [{
@@ -31,26 +32,38 @@ const studentSchema = new mongoose.Schema({
     }
 })
 
-studentSchema.method.addClass = async function (classId) {
-    try {
-        const classToAdd = await ClassModel.findById(classId)
-        if (!classToAdd) {
-            throw new Error('Class not found')
-        }
-
-        if (this.enrolled_classes.includes(classId)) {
-            throw new Error('Already enrolled in this class')
-        }
-        this.outstanding_fees += classToAdd.populate('course_id').price
-        this.enrolled_classes.push(classId)
-        classToAdd.students.push(this._id)
-        await classToAdd.save()
-        await this.save()
-        next()
-    } catch (error) {
-        throw new Error(error)
+studentSchema.methods.addClass = async function (classId) {
+    const classToAdd = await ClassModel
+        .findById(classId)
+        .populate('course');
+    if (!classToAdd) {
+        throw new Error('Class not found');
     }
-}
+
+    if (this.enrolled_classes.includes(classId)) {
+        throw new Error('Already enrolled in this class');
+    }
+
+    const price = Number(classToAdd.course.price);
+    this.outstanding_fees += price;
+
+    this.enrolled_classes.push(classId);
+
+    await CourseModel.findByIdAndUpdate(
+        classToAdd.course._id,
+        { $pull: { requested_students: this._id } }
+    );
+
+    classToAdd.students.push(this._id);
+
+
+    await Promise.all([
+        this.save(),
+        classToAdd.save()
+    ]);
+
+    return this;
+};
 
 
 const StudentModel = User.discriminator('student', studentSchema)
