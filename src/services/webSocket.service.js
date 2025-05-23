@@ -1,4 +1,5 @@
 const socketAuth = require('../middlewares/socketAuth');
+const ClassModel = require('../models/class.model');
 const ClassPost = require('../models/classPost.model');
 const commentSchema = require('../models/comment.model');
 const Message = require('../models/message.model');
@@ -51,28 +52,52 @@ const webSocketService = {
     },
     classPostRegister(socket) {
         socket.on('initClassUpdate', async (data) => {
-            socket.join(data.classId);
+            console.log("initClassUpdate", data);
+            socket.join(data);
         })
 
         socket.on('classPostComment', async (data) => {
             try {
-                const classPost = await ClassPost.findById(data.classPostId);
-                classPost.comments.push({
-                    data: data.comment,
-                });
+                const { classPostId, comment: commentData, classId } = data;
+
+                const classPost = await ClassPost.findById(classPostId);
+                if (!classPost) throw new Error('ClassPost not found');
+
+                classPost.comments.push(commentData);
+
                 await classPost.save();
-                this.io.to(data.classId).emit('classPostComment', data.comment);
+
+                const populatedClassPost = await classPost.populate(
+                    {
+                        path: `comments.${classPost.comments.length - 1}.author`,
+                        select: '_id name avatar_url'
+                    }
+                );
+
+                const newComment = populatedClassPost.comments[classPost.comments.length - 1];
+                console.log("new comment", newComment);
+                console.log("classId", classId);
+                this.io.to(classId).emit('classPostComment', newComment);
             } catch (error) {
-                console.error("error creating new class post comment:", error);
+                console.error('error creating new class post comment:', error);
             }
-        })
+        });
+
 
         socket.on('classPostCreate', async (data) => {
             try {
                 const newPost = await ClassPost.create({
                     ...data,
                 });
-                this.io.to(data.classId).emit('classPostCreate', newPost);
+                const classObj = await ClassModel.findById(data.classId);
+                classObj.class_posts.push(newPost._id);
+                await classObj.save();
+
+                const populatedClassPost = await newPost.populate({
+                    path: "author",
+                    select: "_id name email avatar_url"
+                })
+                this.io.to(data.classId).emit('classPostCreate', populatedClassPost);
             } catch (error) {
                 console.error("error creating new class post:", error);
             }

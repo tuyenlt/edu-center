@@ -9,7 +9,7 @@ const apiCors = cors({
     // origin: "http://localhost:5173",
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (origin === "http://localhost:5173") {
+        if (origin.includes("http://localhost")) {
             return callback(null, true);
         }
         const allowedRegex = /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/;
@@ -29,7 +29,7 @@ const socketCors = {
     // origin: 'http://localhost:5173',
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (origin === "http://localhost:5173") {
+        if (origin.includes("http://localhost")) {
             return callback(null, true);
         }
         const allowedRegex = /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/;

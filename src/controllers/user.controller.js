@@ -210,6 +210,35 @@ const userController = {
             res.status(500).send(error)
         }
     },
+    getUserSchedules: async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id).populate({
+                path: "enrolled_classes",
+                select: "class_sessions class_name",
+                populate: [
+                    {
+                        path: "class_sessions",
+                        select: "_id start_time end_time title room ",
+                    },
+                ]
+            });
+            if (!user) {
+                return res.status(404).json({ error: "user not found" });
+            }
+            const schedules = user.enrolled_classes.map((classItem) => {
+                return classItem.class_sessions.map((session) => {
+                    return {
+                        class_name: classItem.class_name,
+                        ...session._doc,
+                    };
+                });
+            });
+            res.json(schedules.flat());
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({ error: error })
+        }
+    }
 };
 
 module.exports = userController;

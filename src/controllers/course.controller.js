@@ -84,11 +84,7 @@ const courseController = {
             const courseId = req.params.id;
             const student = await User.findById(req.user._id).populate({
                 path: "enrolled_classes",
-                select: "course_id",
-                populate: {
-                    path: "course_id",
-                    select: "_id"
-                }
+                select: "course",
             })
 
             console.log(student)
@@ -102,7 +98,7 @@ const courseController = {
             console.log(student.enrolled_classes)
 
             for (const enrolledClass of student.enrolled_classes) {
-                if (enrolledClass.course_id._id.toString() === courseId) {
+                if (enrolledClass.course.toString() === courseId) {
                     return res.status(400).json({ message: 'Already enrolled in this course' });
                 }
             }

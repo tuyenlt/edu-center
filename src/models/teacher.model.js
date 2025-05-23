@@ -3,7 +3,7 @@ const User = require('./user.model');
 const ClassModel = require('./class.model');
 
 const teacherSchema = new mongoose.Schema({
-    assigned_classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }],
+    enrolled_classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }],
     fixed_salary: {
         type: Number,
         required: true,
@@ -57,26 +57,6 @@ const teacherSchema = new mongoose.Schema({
 
 });
 
-teacherSchema.methods.addAssignedClass = async function (classId) {
-    const classObj = await ClassModel.findById(classId);
-    if (!classObj) {
-        throw new Error('Class not found');
-    }
-
-    if (this.assigned_classes.includes(classId)) {
-        throw new Error('Already assigned to this class');
-    }
-
-    this.assigned_classes.push(classId);
-    classObj.teachers.push(this._id);
-
-    await Promise.all([
-        this.save(),
-        classObj.save()
-    ]);
-
-    return this;
-};
 
 
 const Teacher = User.discriminator('teacher', teacherSchema);

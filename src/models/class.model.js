@@ -69,6 +69,7 @@ classSchema.pre('deleteOne', async function (next) {
     next()
 })
 
+
 const ClassModel = mongoose.model('classes', classSchema)
 
 module.exports = ClassModel

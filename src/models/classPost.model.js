@@ -4,7 +4,6 @@ const commentSchema = require('./comment.model');
 const classPostSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true,
     },
     content: {
         type: String,
@@ -15,9 +14,9 @@ const classPostSchema = new mongoose.Schema({
         ref: 'Class',
         required: true,
     },
-    authorId: {
+    author: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'users',
         required: true,
     },
     type: {
@@ -25,12 +24,14 @@ const classPostSchema = new mongoose.Schema({
         enum: ['assignment', 'announcement'],
         required: true,
     },
+    links: [{
+        type: String,
+    }],
     attachments: [{
         type: String,
     }],
     comments: [{
         type: commentSchema,
-        ref: 'Comment',
         default: [],
     }],
     assignment: {
@@ -44,7 +45,7 @@ const classPostSchema = new mongoose.Schema({
 })
 
 
-const ClassPost = mongoose.model('ClassPost', classPostSchema);
+const ClassPost = mongoose.model('class_posts', classPostSchema);
 
 
 module.exports = ClassPost;

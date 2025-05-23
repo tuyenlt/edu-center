@@ -6,13 +6,13 @@ const chatController = require('../controllers/chat.controller')
 
 
 router.post("/chatrooms", auth, chatController.createNewChatroom)
-router.get("/chatrooms/:id", auth, chatController.getChatMessage)
+router.get("/chatrooms/:id", auth, chatController.getChatRoomById)
 router.post("/chatrooms/:id/join", auth, chatController.joinChat)
 router.post("/chatrooms/:id/add-member", auth, chatController.addNewMembers)
 router.post("/chatrooms/:id/leave", auth, chatController.leaveChat)
 router.get("/chat-of-user", auth, chatController.getUserChatrooms)
-router.get("/student-contacting", auth, chatController.getStudentContacting)
-router.post("/student-contacting/:id/join", auth, chatController.joinStudentContacting)
+router.get("/chatrooms-contact/", auth, chatController.getContactChatrooms)
+router.post("/chatrooms-contact/:id/join", auth, chatController.takeStudentContactChat)
 
 
 module.exports = router

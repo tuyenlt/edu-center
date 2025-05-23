@@ -1,4 +1,5 @@
 const Chatroom = require('../models/chatroom.model')
+const { path } = require('../models/comment.model')
 const Message = require('../models/message.model')
 const User = require('../models/user.model')
 
@@ -24,10 +25,10 @@ const chatController = {
             if (!req.body.name) {
                 throw new Error('Chat room name is missing')
             }
-            if (req.body.type === "student-contacting") {
-                const studentContactingChatroom = await Chatroom.findOne({ type: "student-contacting", owner: req.user._id });
-                if (studentContactingChatroom) {
-                    return res.status(200).json(studentContactingChatroom);
+            if (req.body.type === "contact") {
+                const contactChatroom = await Chatroom.findOne({ type: "contact", owner: req.user._id });
+                if (contactChatroom) {
+                    return res.status(200).json(contactChatroom);
                 }
             }
             const chatroom = new Chatroom({
@@ -44,6 +45,7 @@ const chatController = {
             await user.save();
             return res.send(chatroom)
         } catch (e) {
+            console.error(e);
             res.status(500).send(e.message)
         }
     },
@@ -139,18 +141,17 @@ const chatController = {
             res.status(500).json({ error: e.message });
         }
     },
-    getChatMessage: async (req, res) => {
+    getChatRoomById: async (req, res) => {
         try {
             const chatroom = await validateChatId(req.params.id)
             let messagesLimit = req.query.limit;
             let rangeIndex = req.query.index;
 
-            // if (!chatroom.members.map(id => id.toString()).includes(req.user._id.toString())) {
-            //     return res.status(403).json({ error: "You are not a member of this chatroom" });
-            // }
+            if (!chatroom.members.map(id => id.toString()).includes(req.user._id.toString())) {
+                return res.status(403).json({ error: "You are not a member of this chatroom" });
+            }
 
             if (!messagesLimit || !rangeIndex) {
-                // TODO get all
                 rangeIndex = 0;
                 messagesLimit = 9000;
             }
@@ -163,10 +164,12 @@ const chatController = {
                 },
                 populate: {
                     path: "author",
-                    select: "name avatar_url"
+                    select: "_id name avatar_url"
                 }
             })
-            console.log(chatData)
+
+
+
             res.status(200).json(chatData);
         } catch (e) {
             console.log(e);
@@ -175,16 +178,27 @@ const chatController = {
     },
     getUserChatrooms: async (req, res) => {
         try {
-            const chatrooms = await User.findById(req.user._id).populate("chatrooms");
+            const chatrooms = await User.findById(req.user._id).populate({
+                path: "chatrooms",
+                select: "name avatar_url type owner members",
+                populate: [{
+                    path: "owner",
+                    select: "_id name avatar_url"
+                },
+                {
+                    path: "members",
+                    select: "_id name avatar_url"
+                }]
+            });
             res.status(200).json(chatrooms.chatrooms);
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "error getting chat message" })
         }
     },
-    getStudentContacting: async (req, res) => {
+    getContactChatrooms: async (req, res) => {
         try {
-            const chatrooms = await Chatroom.find({ type: "student-contacting", taken: false }).populate({
+            const chatrooms = await Chatroom.find({ type: "contact", taken: false }).populate({
                 path: "owner",
                 select: "name avatar_url"
             });
@@ -194,10 +208,12 @@ const chatController = {
             res.status(500).json({ error: "error getting chat message" })
         }
     },
-    joinStudentContacting: async (req, res) => {
+    takeStudentContactChat: async (req, res) => {
         try {
             const chatroom = await validateChatId(req.params.id)
-
+            if (chatroom.type !== "contact") {
+                return res.status(403).json({ error: "Permission denied" })
+            }
             if (chatroom.taken) {
                 return res.status(403).json({ error: "Already taken" });
             }
@@ -207,8 +223,7 @@ const chatController = {
             user.chatrooms.push(chatroom._id);
             await user.save();
             await chatroom.save()
-
-            res.send("success")
+            res.status(200).json(chatroom);
 
         } catch (e) {
             res.status(500).send(e.message)
