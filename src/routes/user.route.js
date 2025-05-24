@@ -5,6 +5,18 @@ const userController = require('../controllers/user.controller');
 
 const router = express.Router();
 
+router.get('/users/test-auth', auth, (req, res) => {
+    try {
+        if (!req.cookies['refresh-token']) {
+            return res.status(401).json({ error: "Unauthorized" })
+        }
+        res.status(200).json({ message: "Authorized" })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: err.message })
+    }
+})
+
 router.post("/users", userController.registerUser);
 router.patch("/users", auth, userController.updateUser);
 router.delete("/users/me", auth, userController.deleteCurrentUser);
@@ -16,4 +28,6 @@ router.post("/users/login", userController.login);
 router.post("/users/refresh-token", userController.refreshToken);
 router.get("/users/profile/:id", auth, userController.getUserProfileByID);
 router.get("/users/:id/schedules", auth, userController.getUserSchedules);
+
+
 module.exports = router;
