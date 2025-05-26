@@ -52,9 +52,25 @@ const classSessionSchema = new mongoose.Schema({
     }]
 }, { timestamps: true, collection: "class_sessions" });
 
+classSessionSchema.pre('save', async function (next) {
+    const classDoc = await ClassModel.findById(this.class_id);
+    if (classDoc) {
+        // Check if the session already exists in the class
+        if (classDoc.class_sessions.includes(this._id)) {
+            return next();
+        }
+        console.log("Adding class session to class:", this._id);
+        classDoc.class_sessions.push(this._id);
+        await classDoc.save();
+    }
+    next();
+})
+
 classSessionSchema.pre('deleteOne', async function (next) {
     const classDoc = await ClassModel.findById(this.class_id)
     classDoc.class_sessions = classDoc.class_sessions.filter(session_id => session_id != this._id)
+    await classDoc.save();
+    next();
 })
 
 const ClassSessionModel = mongoose.model('class_sessions', classSessionSchema);

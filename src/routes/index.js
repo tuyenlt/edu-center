@@ -6,6 +6,9 @@ const chatRoutes = require('./chat.route')
 const courseRoutes = require('./course.route')
 const classSessionRoutes = require('./classSession.route')
 const uploadRoutes = require('./upload.route')
+const teacherRoutes = require('./teacher.route')
+const billingRoutes = require('./bill.route')
+const assignmentRoutes = require('./assignment.route')
 
 const router = express.Router()
 
@@ -16,5 +19,8 @@ router.use(chatRoutes)
 router.use(courseRoutes)
 router.use(classSessionRoutes)
 router.use(uploadRoutes)
+router.use(teacherRoutes)
+router.use(billingRoutes)
+router.use(assignmentRoutes)
 
 module.exports = router

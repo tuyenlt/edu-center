@@ -8,14 +8,14 @@ const assignmentSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    class_id: {
+    class: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'classes',
         required: true
     },
-    teacher_id: {
+    teacher: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'teachers',
+        ref: 'users',
         required: true
     },
     due_date: {
@@ -26,11 +26,17 @@ const assignmentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    links: [{
+        type: String
+    }],
+    students: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
+    }],
     submissions: [{
-        student_id: {
+        student: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'students',
-            required: true
+            ref: 'users',
         },
         text: {
             type: String
@@ -38,7 +44,7 @@ const assignmentSchema = new mongoose.Schema({
         quiz_answers: [{
             type: String
         }],
-        urls: [{
+        links: [{
             type: String
         }],
         score: {
@@ -46,7 +52,10 @@ const assignmentSchema = new mongoose.Schema({
         },
         feedback: {
             type: String
-        }
+        },
+        submitted_at: {
+            type: Date
+        },
     }]
 }, { timestamps: true, collection: "assignments" });
 

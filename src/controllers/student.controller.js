@@ -22,7 +22,10 @@ const studentController = {
     },
     getAllStudents: async (req, res) => {
         try {
-            const students = await StudentModel.find().populate('enrolled_classes', 'name')
+            const students = await StudentModel.find().populate({
+                path: "enrolled_classes",
+                select: "class_name class_code",
+            })
             res.json(students)
         } catch (error) {
             res.status(500).json({ error: error })

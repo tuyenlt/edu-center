@@ -23,6 +23,9 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
+    gender: {
+        type: String,
+    },
     phone_number: {
         type: String,
         validate(value) {

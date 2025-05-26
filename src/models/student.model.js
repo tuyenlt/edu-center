@@ -8,8 +8,10 @@ const studentSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'classes'
     }],
-    outstanding_fees: { type: Number, default: 0 },
-    paid_fees: { type: Number, default: 0 },
+    tuitions: [{
+        type: mongoose.Types.ObjectId,
+        ref: 'bills'
+    }],
     attended_class_sessions: [{
         type: mongoose.Types.ObjectId,
         ref: 'class_sessions'

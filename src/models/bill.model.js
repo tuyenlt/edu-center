@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const BillSchema = new mongoose.Schema({
-    user_id: {
+    user: {
         type: mongoose.Types.ObjectId,
         ref: 'users',
         required: true
@@ -10,20 +10,48 @@ const BillSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    type: String,
-    payment_method: {
+    type: {
         type: String,
         required: true,
-        enum: ['cash', 'onlineBanking']
+        enum: ['tuition', 'salary', 'other']
+    },
+    status: {
+        type: String,
+        required: true,
+        enum: ['paid', 'unpaid', 'pending']
+    },
+    payment_method: {
+        type: String,
+        required: function () {
+            return this.status === 'paid';
+        },
+        enum: ['cash', 'banking']
+    },
+    payment_details: {
+        transactionId: {
+            type: String,
+        },
+        bankName: {
+            type: String,
+            required: function () {
+                return this.payment_method === 'banking';
+            }
+        }
     },
     course: {
         type: mongoose.Types.ObjectId,
-        ref: "courses"
+        ref: "courses",
+        required: function () {
+            return this.type === 'tuition';
+        }
     },
-    sessions: [{
+    session: {
         type: mongoose.Types.ObjectId,
-        ref: 'class_sessions'
-    }],
+        ref: 'class_sessions',
+        required: function () {
+            return this.type === 'salary';
+        }
+    },
 }, {
     timestamps: true,
     collection: 'bills'

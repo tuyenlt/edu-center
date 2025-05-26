@@ -101,14 +101,37 @@ const userController = {
     updateUser: async (req, res) => {
         try {
             const updateFields = Object.keys(req.body);
-            const allowedUpdateFields = ["name", "email", "password", "avatar_url"];
-            const isValidOperation = updateFields.every(field => allowedUpdateFields.includes(field));
+            const BannedUpdateFields = ["role"];
+            const isValidOperation = updateFields.every(field => !BannedUpdateFields.includes(field));
 
             if (!isValidOperation) {
                 return res.status(400).send({ error: "Invalid update field" });
             }
 
             const user = await User.findById(req.user._id);
+            if (!user) {
+                return res.status(404).send({ error: "User not exists" });
+            }
+
+            updateFields.forEach(field => user[field] = req.body[field]);
+            await user.save();
+            res.send(user);
+        } catch (error) {
+            console.error("Update error:", error);
+            res.status(500).send(error);
+        }
+    },
+    updateUserById: async (req, res) => {
+        try {
+            const updateFields = Object.keys(req.body);
+            const BannedUpdateFields = ["role"];
+            const isValidOperation = updateFields.every(field => !BannedUpdateFields.includes(field));
+
+            if (!isValidOperation) {
+                return res.status(400).send({ error: "Invalid update field" });
+            }
+
+            const user = await User.findById(req.params.id);
             if (!user) {
                 return res.status(404).send({ error: "User not exists" });
             }
@@ -150,11 +173,12 @@ const userController = {
         try {
             const BaseModel = resolveUserModel(req.body.role);
             const user = new BaseModel(req.body);
-
-            const payload = { _id: user._id, role: user.role };
-            const accessToken = await generateAccessToken(payload);
-            const refreshToken = await generateRefreshToken(payload);
-            res.cookie('refreshToken', refreshToken, cookieOptions)
+            if (!req.query.nologin) {
+                const payload = { _id: user._id, role: user.role };
+                const accessToken = await generateAccessToken(payload);
+                const refreshToken = await generateRefreshToken(payload);
+                res.cookie('refreshToken', refreshToken, cookieOptions)
+            }
             await user.save()
             res.json({ accessToken });
         } catch (error) {

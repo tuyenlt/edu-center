@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
 const User = require('./user.model');
-const ClassModel = require('./class.model');
 
 const teacherSchema = new mongoose.Schema({
     enrolled_classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }],
-    fixed_salary: {
+    hourly_wage: {
         type: Number,
         required: true,
     },
@@ -25,36 +24,28 @@ const teacherSchema = new mongoose.Schema({
     personal_info: {
         dob: {
             type: Date,
-            required: true
         },
         address: {
             type: String,
-            required: true
         },
         tax_number: {
             type: String,
-            required: true
         },
         id_card: {
             type: String,
-            required: true
         },
     },
     payment_info: {
         bank_account: {
             type: String,
-            required: true
         },
         bank_name: {
             type: String,
-            required: true
         },
         account_holder_name: {
             type: String,
-            required: true
         }
     }
-
 });
 
 

@@ -44,7 +44,8 @@ const classSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['pending', 'scheduling', 'ongoing', 'finished'],
-        require: true
+        default: 'pending',
+        required: true
     },
     assignments: [{
         type: mongoose.Types.ObjectId,

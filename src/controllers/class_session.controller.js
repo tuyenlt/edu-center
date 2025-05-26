@@ -7,6 +7,7 @@ const classSessionController = {
             await newClassSession.save();
             res.status(201).json(newClassSession);
         } catch (error) {
+            console.error("Error creating class session:", error);
             res.status(500).json({ error: error.message });
         }
     },
@@ -34,19 +35,19 @@ const classSessionController = {
             const classSessionId = req.params.id;
             const updateData = req.body;
 
-            const updatedClassSession = await ClassSessionModel.findByIdAndUpdate(
-                classSessionId,
-                updateData,
-                { new: true, runValidators: true }
-            );
+            const session = await ClassSessionModel.findById(classSessionId);
 
-            if (!updatedClassSession) {
-                return res.status(404).json({ message: 'Class session not found' });
-            }
+            Object.keys(updateData).forEach(key => {
+                if (updateData[key] !== undefined) {
+                    session[key] = updateData[key];
+                }
+            });
+
+            await session.save();
 
             return res.status(200).json({
                 message: 'Class session updated successfully',
-                data: updatedClassSession
+                data: session
             });
         } catch (error) {
             console.error(error);
@@ -69,8 +70,11 @@ const classSessionController = {
             });
         } catch (error) {
             console.error(error);
-
+            return res.status(500).json({ message: 'Server error', error });
         }
+    },
+    getUserClassSessions: async (req, res) => {
+
     }
 }
 

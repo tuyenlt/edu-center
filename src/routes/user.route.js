@@ -28,6 +28,7 @@ router.post("/users/login", userController.login);
 router.post("/users/refresh-token", userController.refreshToken);
 router.get("/users/profile/:id", auth, userController.getUserProfileByID);
 router.get("/users/:id/schedules", auth, userController.getUserSchedules);
+router.patch("/users/:id", auth, userController.updateUserById);
 
 
 module.exports = router;

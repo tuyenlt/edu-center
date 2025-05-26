@@ -7,6 +7,7 @@ const Chatroom = require('../models/chatroom.model');
 const { remove, path } = require('../models/comment.model');
 const ClassPost = require('../models/classPost.model');
 const webSocketService = require('../services/webSocket.service');
+const BillModel = require('../models/bill.model');
 
 const classController = {
     /**
@@ -21,6 +22,7 @@ const classController = {
             await newClass.save();
             res.status(200).json(newClass);
         } catch (error) {
+            console.error("Error creating class:", error);
             res.status(500).json({ error: error.message });
         }
     },
@@ -37,12 +39,19 @@ const classController = {
      */
     getAllClasses: async (req, res) => {
         try {
-            const classes = await ClassModel.find().populate({
-                path: "teachers",
-                select: "_id name avatar_url"
-            });
+            const classes = await ClassModel.find().populate([
+                {
+                    path: "teachers",
+                    select: "_id name avatar_url"
+                },
+                {
+                    path: "class_sessions",
+                    select: "_id start_time end_time"
+                }
+            ]);
             res.status(200).json(classes);
         } catch (error) {
+            console.error("Get all classes error:", error);
             res.status(500).json({ error: error.message });
         }
     },
@@ -109,17 +118,19 @@ const classController = {
         try {
             const updateFields = Object.keys(req.body);
             const allowedUpdateFields = [
-                'class_name', 'class_code', 'level', 'teacher_id',
-                'max_students', 'schedule', 'notes'
+                'class_name', 'class_code',
+                'max_students', 'notes', 'status'
             ];
             const isValidOperation = updateFields.every(field => allowedUpdateFields.includes(field));
 
             if (!isValidOperation) {
+                console.error("Invalid update fields:", updateFields);
                 return res.status(400).json({ error: "Invalid update field" });
             }
 
             const classDoc = await ClassModel.findById(req.params.id);
             if (!classDoc) {
+                console.error("Class not found with ID:", req.params.id);
                 return res.status(404).json({ error: "Class not found" });
             }
 
@@ -127,6 +138,7 @@ const classController = {
             await classDoc.save();
             res.json(classDoc);
         } catch (error) {
+            console.error("Error updating class:", error);
             res.status(500).json({ error: error.message });
         }
     },
@@ -215,6 +227,10 @@ const classController = {
                     {
                         path: 'course',
                         select: '_id name goal course_level img_url'
+                    },
+                    {
+                        path: 'class_sessions',
+                        select: '_id start_time end_time'
                     }
                 ]
             });
@@ -305,7 +321,10 @@ const classController = {
         try {
             const userIds = req.body.userIds;
             const classId = req.params.id;
-            const classDoc = await ClassModel.findById(classId);
+            const classDoc = await ClassModel.findById(classId).populate({
+                path: "course",
+                select: "price"
+            });
             if (!classDoc) {
                 return res.status(404).json({ message: "Class not found" });
             }
@@ -320,6 +339,15 @@ const classController = {
                     }
                     classDoc.students.push(user._id);
                     user.enrolled_classes.push(classDoc._id);
+                    const bill = await BillModel.create({
+                        user: user._id,
+                        amount: classDoc.course.price,
+                        course: classDoc.course._id,
+                        status: 'pending',
+                        type: 'tuition',
+                    })
+                    user.bills.push(bill._id);
+                    await bill.save();
                 } else if (user.role === 'teacher') {
                     if (classDoc.teachers.includes(user._id)) {
                         return res.status(403).json({ message: "This class already has a teacher" });

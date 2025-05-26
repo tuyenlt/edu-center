@@ -17,7 +17,7 @@ router.get("/classes/:id", classController.getClassById)
 router.patch("/classes/:id", authorizeRole(["manager"]), classController.updateClass)
 router.delete("/classes/:id", authorizeRole(["manager"]), classController.deleteClass)
 
-router.post("/classes/:id/add-user", authorizeRole(["manager", "teacher", "staff"]), classController.addUserToClass)
+router.post("/classes/:id/add-users", authorizeRole(["manager", "teacher", "staff"]), classController.addUserToClass)
 router.delete("/classes/:id/remove-user", authorizeRole(["manager", "teacher", "staff"]), classController.removeUserFromClass)
 router.post("/classes/:id/add-session", authorizeRole(["manager"]), classController.addSession)
 router.post("/classes/:id/join", authorizeRole(["teacher", "student"]), classController.joinClass)
