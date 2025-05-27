@@ -50,6 +50,39 @@ const chatController = {
         }
     },
 
+    createP2PChat: async (req, res) => {
+        try {
+            const owner_id = req.user._id;
+            const member_id = req.params.id;
+
+            const p2pChatroom = await Chatroom.findOne({
+                members: { $all: [owner_id, member_id] }
+            });
+
+            if (p2pChatroom) {
+                return res.status(200).json(p2pChatroom);
+            }
+
+            const chatroom = new Chatroom({
+                owner: owner_id,
+                members: [owner_id, member_id],
+                type: "p2p",
+                name: `${member_id} & ${owner_id}`
+            });
+
+            await chatroom.save();
+
+            await User.updateMany(
+                { _id: { $in: [owner_id, member_id] } },
+                { $push: { chatrooms: chatroom._id } }
+            );
+            res.status(200).json(chatroom);
+        } catch (e) {
+            console.error(e);
+            res.status(500).send(e.message)
+        }
+    },
+
     addNewMembers: async (req, res) => {
         try {
             const chatroom = await validateChatId(req.params.id)

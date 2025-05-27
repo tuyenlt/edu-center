@@ -1,4 +1,5 @@
 const CourseModel = require('../models/course.model')
+const NotifyModel = require('../models/notify.model')
 const StudentModel = require('../models/student.model')
 const User = require('../models/user.model')
 
@@ -102,6 +103,8 @@ const courseController = {
                     return res.status(400).json({ message: 'Already enrolled in this course' });
                 }
             }
+
+
 
             if (course.requested_students.includes(req.user._id)) {
                 course.requested_students = course.requested_students.filter(studentId => studentId.toString() !== req.user._id.toString());

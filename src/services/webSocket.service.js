@@ -1,8 +1,11 @@
 const socketAuth = require('../middlewares/socketAuth');
+const Chatroom = require('../models/chatroom.model');
 const ClassModel = require('../models/class.model');
 const ClassPost = require('../models/classPost.model');
 const commentSchema = require('../models/comment.model');
 const Message = require('../models/message.model');
+const NotifyModel = require('../models/notify.model');
+const User = require('../models/user.model');
 
 const webSocketService = {
     io: null,
@@ -39,6 +42,49 @@ const webSocketService = {
                     content: message
                 });
                 await newMessage.save()
+
+                const chatroom = await Chatroom.findById(roomId);
+                const receivers = chatroom.members.filter(user => user.toString() !== socket.user._id.toString());
+
+                // if user is not online, we can send a notification if not already sent
+                for (const userId of receivers) {
+                    if (userId.toString() !== socket.user._id.toString()) {
+                        const userSocket = this.sockets.find(s => s.user._id.toString() === userId.toString());
+                        if (!userSocket) {
+                            const notification = {
+                                title: `${socket.user.name} sent a message`,
+                                content: message,
+                                type: 'chat_message',
+                                link: `/chat/${roomId}`,
+                            };
+
+                            let notifyDoc = await NotifyModel.findOne({
+                                type: notification.type,
+                                link: notification.link,
+                                users: userId,
+                            });
+
+                            if (notifyDoc) {
+                                notifyDoc.updatedAt = new Date();
+                                await notifyDoc.save();
+                            } else {
+                                notifyDoc = await NotifyModel.create({
+                                    ...notification,
+                                    users: [userId]
+                                });
+                                await User.findByIdAndUpdate(userId, {
+                                    $push: {
+                                        notifies: {
+                                            notify: notifyDoc._id,
+                                            is_seen: false
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+
                 console.log(newMessage)
                 this.io.to(roomId).emit('chatMessage', {
                     author: socket.user,

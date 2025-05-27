@@ -12,6 +12,9 @@ const notifySchema = new mongoose.Schema({
     content: {
         type: String
     },
+    type: {
+        type: String,
+    },
     link: {
         type: String
     }
@@ -20,6 +23,6 @@ const notifySchema = new mongoose.Schema({
     timestamps: true
 })
 
-const notifyModel = mongoose.model('notifies', notifySchema)
+const NotifyModel = mongoose.model('notifies', notifySchema)
 
-module.exports = notifyModel
+module.exports = NotifyModel

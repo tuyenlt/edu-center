@@ -8,6 +8,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const { apiCors, socketCors } = require('./configs/corsConfig')
 const webSocketService = require('./services/webSocket.service')
+const notifyJob = require('./crons/notifyJob') // runs every minute to send notifications
 
 const app = express()
 const server = http.createServer(app)

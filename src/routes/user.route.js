@@ -30,6 +30,7 @@ router.get("/users/profile/:id", auth, userController.getUserProfileByID);
 router.get("/users/:id/schedules", auth, userController.getUserSchedules);
 router.patch("/users/:id", auth, userController.updateUserById);
 router.get("/users/:id/bills", auth, userController.getUserBills);
+router.get("/users/:id/notifies", auth, userController.getUserNotifies);
 
 
 module.exports = router;

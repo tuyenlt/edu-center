@@ -58,12 +58,13 @@ const userSchema = new mongoose.Schema({
         ref: "bills"
     }],
     notifies: [{
-        notify_id: {
+        notify: {
             type: mongoose.Types.ObjectId,
             ref: "notifies"
         },
         is_seen: {
-            Boolean
+            type: Boolean,
+            default: false
         }
     }],
     isOnline: {

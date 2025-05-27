@@ -281,6 +281,29 @@ const userController = {
             console.error(error)
             res.status(500).json({ error: error })
         }
+    },
+
+    getUserNotifies: async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id).populate({
+                path: "notifies.notify",
+            })
+
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            const notifies = user.notifies.map(notify => ({
+                notify: notify.notify,
+                is_seen: notify.is_seen
+            }));
+
+            res.status(200).json(notifies);
+
+        } catch (error) {
+            console.error("Get user notifies error:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
     }
 };
 

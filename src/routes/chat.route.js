@@ -13,6 +13,7 @@ router.post("/chatrooms/:id/leave", auth, chatController.leaveChat)
 router.get("/chat-of-user", auth, chatController.getUserChatrooms)
 router.get("/chatrooms-contact/", auth, chatController.getContactChatrooms)
 router.post("/chatrooms-contact/:id/join", auth, chatController.takeStudentContactChat)
+router.post("/chatrooms/p2p/:id", auth, chatController.createP2PChat)
 
 
 module.exports = router

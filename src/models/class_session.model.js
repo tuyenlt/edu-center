@@ -46,6 +46,10 @@ const classSessionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    notified: {
+        type: Boolean,
+        default: false
+    },
     attendance: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'

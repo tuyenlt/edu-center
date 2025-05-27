@@ -15,10 +15,20 @@ const billController = {
     getUserBills: async (req, res) => {
         try {
             const userId = req.params.id;
-            const bills = await BillModel.find({ user: userId }).populate({
-                path: 'user',
-                select: 'name email role phone_number'
-            });
+            const bills = await BillModel.find({ user: userId }).populate([
+                {
+                    path: 'user',
+                    select: 'name email role phone_number'
+                },
+                {
+                    path: 'session',
+                    select: '_id start_time end_time title room',
+                    populate: {
+                        path: "class",
+                        select: '_id name'
+                    }
+                },
+            ]);
             res.status(200).json(bills);
         } catch (error) {
             res.status(500).json({ message: "Error fetching user bills", error: error.message });
