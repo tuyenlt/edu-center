@@ -205,13 +205,32 @@ const userController = {
 
     getUserBills: async (req, res) => {
         try {
-            const user = await User.findById(req.user._id);
+            const user = await User.findById(req.params.id);
             if (!user) {
                 return res.status(404).send({ error: "User not exists" });
             }
-            const bills = await user.populate('bills')
-            res.json(bills)
-
+            const populated = await user.populate({
+                path: "bills",
+                populate: [
+                    {
+                        path: "user",
+                        select: "name email avatar_url"
+                    },
+                    {
+                        path: "course",
+                        select: "name level"
+                    },
+                    {
+                        path: "session",
+                        select: "class start_time end_time",
+                        populate: {
+                            path: "class_id",
+                            select: "class_name class_code"
+                        }
+                    }
+                ]
+            })
+            res.json(populated.bills);
         } catch (error) {
             console.error("Get user bills error:", error);
             res.status(500).send(error)

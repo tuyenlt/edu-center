@@ -29,6 +29,7 @@ router.post("/users/refresh-token", userController.refreshToken);
 router.get("/users/profile/:id", auth, userController.getUserProfileByID);
 router.get("/users/:id/schedules", auth, userController.getUserSchedules);
 router.patch("/users/:id", auth, userController.updateUserById);
+router.get("/users/:id/bills", auth, userController.getUserBills);
 
 
 module.exports = router;

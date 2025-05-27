@@ -28,11 +28,11 @@ const teacherController = {
                 return res.status(404).json({ message: "Teacher not found" });
             }
 
-            teacher.attended_class_sessions.forEach(session => {
+            for (const session of teacher.attended_class_sessions) {
                 if (session.class_session.toString() === sessionId) {
                     return res.status(400).json({ message: "Session already added" });
                 }
-            })
+            }
 
             const session = await ClassSessionModel.findById(sessionId);
 

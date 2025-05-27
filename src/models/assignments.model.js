@@ -33,30 +33,12 @@ const assignmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     }],
-    submissions: [{
-        student: {
+    submissions: [
+        {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'users',
-        },
-        text: {
-            type: String
-        },
-        quiz_answers: [{
-            type: String
-        }],
-        links: [{
-            type: String
-        }],
-        score: {
-            type: Number
-        },
-        feedback: {
-            type: String
-        },
-        submitted_at: {
-            type: Date
-        },
-    }]
+            ref: 'submissions'
+        }
+    ]
 }, { timestamps: true, collection: "assignments" });
 
 const AssignmentModel = mongoose.model('assignments', assignmentSchema);

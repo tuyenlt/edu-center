@@ -4,6 +4,8 @@ const TeacherModel = require('../models/teacher.model')
 const ClassModel = require('../models/class.model');
 const { default: mongoose } = require('mongoose');
 const { get } = require('../models/comment.model');
+const SubmissionModel = require('../models/submissons.model');
+const ClassPost = require('../models/classPost.model');
 
 const assignmentController = {
     addAssignment: async (req, res) => {
@@ -17,6 +19,14 @@ const assignmentController = {
                     { _id: assignment.class },
                     { $push: { assignments: assignment._id } }
                 );
+
+                await ClassPost.create({
+                    classId: assignment.class,
+                    author: assignment.teacher,
+                    type: 'assignment',
+                    title: assignment.title,
+                    assignment: assignment._id,
+                })
 
                 await StudentModel.updateMany(
                     { _id: { $in: assignment.students } },
@@ -98,32 +108,26 @@ const assignmentController = {
             res.status(500).json({ error: error.message });
         }
     },
-    addSubmission: async (req, res) => {
-        try {
-            const assignmentId = req.params.id;
-            const assignment = await AssignmentModel.findById(assignmentId);
-            const learningClass = await ClassModel.findById(assignment.class);
-            const student_id = req.user._id;
-            if (!learningClass.students.includes(student_id)) {
-                return res.status(400).json({ error: "not in class" });
-            }
-
-            const submission = req.body;
-
-            assignment.submissions.push(submission);
-            await assignment.save()
-
-            res.status(200).json(assignment);
-
-        } catch (error) {
-            console.error("Error adding submission:", error);
-            res.status(500).json(error);
-        }
-    },
     getAssignmentByClass: async (req, res) => {
         try {
             const classId = req.params.classId;
-            const assignments = await AssignmentModel.find({ class: classId });
+            const assignments = await AssignmentModel.find({ class: classId }).populate([
+                {
+                    path: "teacher",
+                    select: '_id name email avatar_url'
+                },
+                {
+                    path: "class",
+                    select: 'class_name class_code'
+                },
+                {
+                    path: "students",
+                    select: '_id name email avatar_url'
+                },
+                {
+                    path: 'submissions',
+                }
+            ]);
             res.status(200).json(assignments);
         } catch (error) {
             console.error("Error fetching assignments by class:", error);
@@ -155,8 +159,11 @@ const assignmentController = {
             const assignmentId = req.params.id;
             const assignment = await AssignmentModel.findById(assignmentId).populate([
                 {
-                    path: 'submissions.student',
-                    select: '_id name email avatar_url'
+                    path: 'submissions',
+                    populate: {
+                        path: 'student',
+                        select: '_id name email avatar_url'
+                    }
                 },
                 {
                     path: "teacher",
@@ -173,6 +180,45 @@ const assignmentController = {
             res.status(200).json(assignment);
         } catch (error) {
             console.error("Error fetching assignment by ID:", error);
+            res.status(500).json({ error: error.message });
+        }
+    },
+    addSubmission: async (req, res) => {
+        try {
+            const assignmentId = req.params.id;
+            const student_id = req.user._id;
+            const assignment = await AssignmentModel.findById(assignmentId);
+
+            const submission = await SubmissionModel.create({
+                assignment: assignmentId,
+                student: student_id,
+                ...req.body
+            });
+
+            assignment.submissions.push(submission._id);
+            await assignment.save()
+
+            res.status(200).json(assignment);
+
+        } catch (error) {
+            console.error("Error adding submission:", error);
+            res.status(500).json(error);
+        }
+    },
+    gradeSubmission: async (req, res) => {
+        try {
+            const submissionId = req.params.id;
+            const { score, feedback } = req.body;
+            const submission = await SubmissionModel.findById(submissionId);
+
+            submission.score = score;
+            submission.feedback = feedback;
+
+            await submission.save();
+
+            res.status(200).json(submission);
+        } catch (error) {
+            console.error("Error grading submission:", error);
             res.status(500).json({ error: error.message });
         }
     }

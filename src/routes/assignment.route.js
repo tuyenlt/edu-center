@@ -14,5 +14,6 @@ router.delete('/assignments/:id', authorizeRole(['teacher']), assignmentControll
 router.get('/assignments/class/:classId', assignmentController.getAssignmentByClass);
 router.get('/assignments/user/:userId', assignmentController.getAssignmentOfUser);
 router.post('/assignments/:id/submit', assignmentController.addSubmission);
+router.patch('/assignments/grade/:id', authorizeRole(['teacher']), assignmentController.gradeSubmission);
 
 module.exports = router;    

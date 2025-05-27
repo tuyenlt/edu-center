@@ -49,6 +49,26 @@ const billController = {
         }
     },
 
+    payBills: async (req, res) => {
+        try {
+            await BillModel.updateMany(
+                { _id: { $in: req.body.ids } },
+                {
+                    $set: {
+                        payment_method: req.body.payment_method,
+                        payment_details: req.body.payment_details,
+                        status: "paid"
+                    }
+                }
+            );
+
+            res.status(200).json({ message: "Bills paid successfully" });
+        } catch (error) {
+            console.error("Error paying bills:", error);
+            res.status(500).json({ message: "Error paying bills", error: error.message });
+        }
+    },
+
     getAllBills: async (req, res) => {
         try {
             const bills = await BillModel.find().populate([

@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.use(auth);
 router.get('/bills/list', authorizeRole(['manager', 'staff']), billController.getAllBills);
+router.patch('/bills/pay', authorizeRole(['manager', 'staff']), billController.payBills);
 router.get('/bills/:id', authorizeRole(['manager', 'staff']), billController.getBillById);
 
 module.exports = router;
