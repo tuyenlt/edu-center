@@ -27,5 +27,7 @@ router.post("/classes/:id/add-assignment", authorizeRole(["teacher"]), assignmen
 
 router.post("/classes/:id/add-post", authorizeRole(["teacher"]), classController.addPost)
 
+router.get("/classes/all/schedule", classController.getAllClassSchedule)
+
 
 module.exports = router;

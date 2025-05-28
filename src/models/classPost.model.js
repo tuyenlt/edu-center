@@ -36,7 +36,7 @@ const classPostSchema = new mongoose.Schema({
     }],
     assignment: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'assignment',
+        ref: 'assignments',
     },
 
 }, {

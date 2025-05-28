@@ -9,8 +9,15 @@ const classPostController = {
 
             const classPosts = await ClassPost.find({ classId })
                 .populate('authorId', 'name avatar_url')
-                .populate('comments')
-                .populate('assignment', '_id');
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'authorId',
+                        select: 'name avatar_url'
+                    }
+                })
+                .populate('assignment', '_id title')
+                .sort({ createdAt: -1 })
 
             res.status(200).json(classPosts);
         } catch (error) {

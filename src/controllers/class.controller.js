@@ -64,24 +64,17 @@ const classController = {
      */
     getClassById: async (req, res) => {
         try {
-            const { id } = req.params;
+            const id = req.params.id;
 
-            let classDoc = await ClassModel.findById(id)
-                .populate({
-                    path: 'course',
-                    select: 'name goal course_level img_url course_programs'
-                })
-                .populate({
-                    path: 'teachers',
-                    select: '_id name avatar_url'
-                })
-                .populate({
-                    path: 'students',
-                    select: '_id name avatar_url'
-                })
-                .populate({
-                    path: 'class_sessions'
-                }).populate({
+            const requestedFields = []
+            if (typeof req.query.populate_fields === 'string') {
+                requestedFields.push(req.query.populate_fields);
+            } else if (Array.isArray(req.query.populate_fields)) {
+                requestedFields.push(...req.query.populate_fields);
+            }
+
+            const populateFields = {
+                class_posts: {
                     path: 'class_posts',
                     populate: [
                         {
@@ -91,22 +84,50 @@ const classController = {
                         {
                             path: 'comments.author',
                             select: '_id name avatar_url'
+                        },
+                        {
+                            path: 'assignment',
+                            select: '_id title description due_date'
                         }
                     ]
-                })
+                },
+                teachers: {
+                    path: 'teachers',
+                    select: '_id name avatar_url'
+                },
+                students: {
+                    path: 'students',
+                    select: '_id name avatar_url'
+                },
+                class_sessions: {
+                    path: 'class_sessions',
+                    select: "_id start_time end_time title description type room"
+                },
+                course: {
+                    path: 'course',
+                    select: '_id name goal course_level img_url course_programs'
+                }
+            };
 
-            // const classDoc = await query.exec();
+            const populateOptions = requestedFields
+                .map(field => populateFields[field])
+                .filter(Boolean);
+
+            const classDoc = await ClassModel.findById(id)
+                .populate(populateOptions)
+                .lean();
 
             if (!classDoc) {
                 return res.status(404).json({ error: "Class not found" });
             }
 
-            res.status(200).json(classDoc);
+            return res.status(200).json(classDoc);
         } catch (error) {
             console.error("Error fetching class:", error);
-            res.status(500).json({ error: "Internal Server Error" });
+            return res.status(500).json({ error: "Internal Server Error" });
         }
     },
+
     /**
      * @route      PATCH /classes/:id
      * @access    Manager
@@ -119,7 +140,7 @@ const classController = {
             const updateFields = Object.keys(req.body);
             const allowedUpdateFields = [
                 'class_name', 'class_code',
-                'max_students', 'notes', 'status'
+                'max_students', 'note', 'status'
             ];
             const isValidOperation = updateFields.every(field => allowedUpdateFields.includes(field));
 
@@ -367,19 +388,24 @@ const classController = {
 
     removeUserFromClass: async (req, res) => {
         try {
-            const user_id = req.body.user_id;
+            const user_id = req.query.user_id;
             const class_id = req.params.id;
             const user = await UserModel.findById(user_id);
             if (!user) {
                 return res.status(404).json({ message: "User not found" });
             }
-            user.enrolled_classes = user.enrolled_classes.filter((class_id) => class_id.toString() !== req.params.id.toString());
-
-            await user.save();
             const classDoc = await ClassModel.findById(class_id);
             if (!classDoc) {
                 return res.status(404).json({ message: "Class not found" });
             }
+            user.enrolled_classes = user.enrolled_classes.filter((class_id) => class_id.toString() !== req.params.id.toString());
+
+            await user.save();
+
+            if (classDoc.status !== 'pending' && classDoc.status !== 'finished') {
+                return res.status(403).json({ message: "Class is in progress" });
+            }
+
             classDoc.students = classDoc.students.filter((user_id) => user_id.toString() !== req.body.user_id.toString());
             classDoc.teachers = classDoc.teachers.filter((user_id) => user_id.toString() !== req.body.user_id.toString());
             await classDoc.save();
@@ -412,6 +438,42 @@ const classController = {
         } catch (error) {
             console.error("Error adding post to class", error);
             res.status(500).json({ message: "An error occurred while adding the post" });
+        }
+    },
+
+    getAllClassSchedule: async (req, res) => {
+        try {
+            const classDocs = await ClassModel.find().populate({
+                path: "class_sessions",
+                select: "_id title description start_time end_time type room"
+            })
+
+            if (!classDocs) {
+                return res.status(404).json({ message: "Class not found" });
+            }
+
+            const schedule = [];
+
+            for (const classDoc of classDocs) {
+                const sessions = classDoc.class_sessions.map(session => ({
+                    id: session._id,
+                    title: session.title,
+                    description: session.description,
+                    start_time: session.start_time,
+                    end_time: session.end_time,
+                    room: session.room,
+                    type: session.type,
+                    class_name: classDoc.class_name,
+                    class_code: classDoc.class_code,
+                }));
+                schedule.push(...sessions);
+            }
+
+            res.status(200).json(schedule);
+
+        } catch (error) {
+            console.error("Error fetching class schedule:", error);
+            res.status(500).json({ error: "Internal Server Error" });
         }
     }
 };

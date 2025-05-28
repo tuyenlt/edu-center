@@ -6,6 +6,8 @@ const { default: mongoose } = require('mongoose');
 const { get } = require('../models/comment.model');
 const SubmissionModel = require('../models/submissons.model');
 const ClassPost = require('../models/classPost.model');
+const webSocketService = require('../services/webSocket.service');
+const NotifyModel = require('../models/notify.model');
 
 const assignmentController = {
     addAssignment: async (req, res) => {
@@ -15,18 +17,27 @@ const assignmentController = {
                 const assignment = new AssignmentModel(req.body);
                 await assignment.save();
 
-                await ClassModel.updateOne(
-                    { _id: assignment.class },
-                    { $push: { assignments: assignment._id } }
-                );
 
-                await ClassPost.create({
+                const classPost = await ClassPost.create({
                     classId: assignment.class,
                     author: assignment.teacher,
                     type: 'assignment',
+                    content: assignment.description,
                     title: assignment.title,
                     assignment: assignment._id,
+                }).then(async post => {
+                    const populatedPost = await post.populate({
+                        path: "author",
+                        select: "_id name email avatar_url"
+                    })
+                    return populatedPost;
                 })
+
+                await ClassModel.updateOne(
+                    { _id: assignment.class },
+                    { $push: { assignments: assignment._id, class_posts: classPost._id } }
+                );
+
 
                 await StudentModel.updateMany(
                     { _id: { $in: assignment.students } },
@@ -37,7 +48,24 @@ const assignmentController = {
                     { _id: assignment.teacher },
                     { $push: { assignments: assignment._id } }
                 );
+
+                const notification = await NotifyModel.create({
+                    type: 'assignment',
+                    title: assignment.title,
+                    content: `New assignment: ${assignment.title}`,
+                    users: assignment.students,
+                    link: `/class/${assignment.class}`,
+                })
+
+                for (const studentId of assignment.students) {
+                    webSocketService.sendUserNotification(studentId, notification);
+                }
+
+                webSocketService.io.to(assignment.class.toString()).emit('classPostCreate', classPost);
+
+                res.status(200).json(assignment);
             })
+
         } catch (error) {
             transSession.abortTransaction();
             console.error("Transaction failed:", error);
@@ -72,7 +100,8 @@ const assignmentController = {
     deleteAssignment: async (req, res) => {
         try {
             const assignmentId = req.params.id;
-            const assignment = await AssignmentModel.findById(assignmentId);
+
+            const assignment = await AssignmentModel.findById(assignmentId).lean();
             if (!assignment) {
                 return res.status(404).json({ message: "Assignment not found" });
             }
@@ -81,33 +110,36 @@ const assignmentController = {
                 return res.status(403).json({ message: "You are not authorized to delete this assignment" });
             }
 
-            if (assignment.submissions.length > 0) {
+            if (assignment.submissions && assignment.submissions.length > 0) {
                 return res.status(400).json({ message: "Cannot delete assignment with submissions" });
             }
 
+            await Promise.all([
+                ClassModel.updateOne(
+                    { _id: assignment.class_id },
+                    { $pull: { assignments: assignmentId } }
+                ),
+                ClassPost.deleteOne({ assignment: assignmentId }),
+                StudentModel.updateMany(
+                    { _id: { $in: assignment.students } },
+                    { $pull: { assignments: assignmentId } }
+                ),
+                TeacherModel.updateOne(
+                    { _id: assignment.teacher },
+                    { $pull: { assignments: assignmentId } }
+                )
+            ]);
+
             await AssignmentModel.deleteOne({ _id: assignmentId });
 
-            await ClassModel.updateOne(
-                { _id: assignment.class_id },
-                { $pull: { assignments: assignmentId } }
-            );
+            return res.status(200).json({ message: "Assignment deleted successfully" });
 
-            await StudentModel.updateMany(
-                { _id: { $in: assignment.students } },
-                { $pull: { assignments: assignmentId } }
-            );
-
-            await TeacherModel.updateOne(
-                { _id: assignment.teacher },
-                { $pull: { assignments: assignmentId } }
-            );
-
-            res.status(200).json({ message: "Assignment deleted successfully" });
         } catch (error) {
             console.error("Error deleting assignment:", error);
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         }
     },
+
     getAssignmentByClass: async (req, res) => {
         try {
             const classId = req.params.classId;
@@ -146,6 +178,10 @@ const assignmentController = {
                 {
                     path: "class",
                     select: 'name code'
+                },
+                {
+                    path: "submissions",
+                    select: '_id student score feedback',
                 }
             ]);
             res.status(200).json(assignments);
