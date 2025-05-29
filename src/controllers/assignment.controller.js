@@ -8,256 +8,263 @@ const SubmissionModel = require('../models/submissons.model');
 const ClassPost = require('../models/classPost.model');
 const webSocketService = require('../services/webSocket.service');
 const NotifyModel = require('../models/notify.model');
+const User = require('../models/user.model');
 
 const assignmentController = {
-    addAssignment: async (req, res) => {
-        const transSession = await mongoose.startSession();
-        try {
-            await transSession.withTransaction(async () => {
-                const assignment = new AssignmentModel(req.body);
-                await assignment.save();
+	addAssignment: async (req, res) => {
+		const transSession = await mongoose.startSession();
+		try {
+			await transSession.withTransaction(async () => {
+				const assignment = new AssignmentModel(req.body);
+				await assignment.save();
 
 
-                const classPost = await ClassPost.create({
-                    classId: assignment.class,
-                    author: assignment.teacher,
-                    type: 'assignment',
-                    content: assignment.description,
-                    title: assignment.title,
-                    assignment: assignment._id,
-                }).then(async post => {
-                    const populatedPost = await post.populate({
-                        path: "author",
-                        select: "_id name email avatar_url"
-                    })
-                    return populatedPost;
-                })
+				const classPost = await ClassPost.create({
+					classId: assignment.class,
+					author: assignment.teacher,
+					type: 'assignment',
+					content: assignment.description,
+					title: assignment.title,
+					assignment: assignment._id,
+				}).then(async post => {
+					const populatedPost = await post.populate({
+						path: "author",
+						select: "_id name email avatar_url"
+					})
+					return populatedPost;
+				})
 
-                await ClassModel.updateOne(
-                    { _id: assignment.class },
-                    { $push: { assignments: assignment._id, class_posts: classPost._id } }
-                );
+				await ClassModel.updateOne(
+					{ _id: assignment.class },
+					{ $push: { assignments: assignment._id, class_posts: classPost._id } }
+				);
 
 
-                await StudentModel.updateMany(
-                    { _id: { $in: assignment.students } },
-                    { $push: { assignments: assignment._id } }
-                )
+				await StudentModel.updateMany(
+					{ _id: { $in: assignment.students } },
+					{ $push: { assignments: assignment._id } }
+				)
 
-                await TeacherModel.updateOne(
-                    { _id: assignment.teacher },
-                    { $push: { assignments: assignment._id } }
-                );
+				await TeacherModel.updateOne(
+					{ _id: assignment.teacher },
+					{ $push: { assignments: assignment._id } }
+				);
 
-                const notification = await NotifyModel.create({
-                    type: 'assignment',
-                    title: assignment.title,
-                    content: `New assignment: ${assignment.title}`,
-                    users: assignment.students,
-                    link: `/class/${assignment.class}`,
-                })
+				const notification = await NotifyModel.create({
+					type: 'assignment',
+					title: assignment.title,
+					content: `New assignment: ${assignment.title}`,
+					users: assignment.students,
+					link: `/class/${assignment.class}`,
+				})
 
-                for (const studentId of assignment.students) {
-                    webSocketService.sendUserNotification(studentId, notification);
-                }
+				// Send notification to all students in the assignment
+				await User.updateMany(
+					{ _id: { $in: assignment.students } },
+					{ $push: { notifications: notification._id } }
+				)
 
-                webSocketService.io.to(assignment.class.toString()).emit('classPostCreate', classPost);
+				for (const studentId of assignment.students) {
+					webSocketService.sendUserNotification(studentId, notification);
+				}
 
-                res.status(200).json(assignment);
-            })
+				webSocketService.io.to(assignment.class.toString()).emit('classPostCreate', classPost);
 
-        } catch (error) {
-            transSession.abortTransaction();
-            console.error("Transaction failed:", error);
-            return res.status(500).json({ message: "add assignment failed", error: error.message });
+				res.status(200).json(assignment);
+			})
 
-        }
-    },
-    updateAssignment: async (req, res) => {
-        try {
-            const allowedUpdateFields = ['title', 'description', 'due_date'];
-            const updateFields = Object.keys(req.body).filter(field => allowedUpdateFields.includes(field));
+		} catch (error) {
+			transSession.abortTransaction();
+			console.error("Transaction failed:", error);
+			return res.status(500).json({ message: "add assignment failed", error: error.message });
 
-            if (updateFields.length === 0) {
-                return res.status(400).json({ message: "No valid fields to update" });
-            }
+		}
+	},
+	updateAssignment: async (req, res) => {
+		try {
+			const allowedUpdateFields = ['title', 'description', 'due_date'];
+			const updateFields = Object.keys(req.body).filter(field => allowedUpdateFields.includes(field));
 
-            const assignment = await AssignmentModel.findById(req.params.id);
+			if (updateFields.length === 0) {
+				return res.status(400).json({ message: "No valid fields to update" });
+			}
 
-            Object.keys(updateFields).forEach(field => {
-                assignment[field] = updateFields[field];
-            })
+			const assignment = await AssignmentModel.findById(req.params.id);
 
-            await assignment.save();
+			Object.keys(updateFields).forEach(field => {
+				assignment[field] = updateFields[field];
+			})
 
-            res.status(200).json(assignment);
-        } catch (error) {
-            console.error("Error updating assignment:", error);
-            res.status(500).json({ error: error.message });
-        }
+			await assignment.save();
 
-    },
-    deleteAssignment: async (req, res) => {
-        try {
-            const assignmentId = req.params.id;
+			res.status(200).json(assignment);
+		} catch (error) {
+			console.error("Error updating assignment:", error);
+			res.status(500).json({ error: error.message });
+		}
 
-            const assignment = await AssignmentModel.findById(assignmentId).lean();
-            if (!assignment) {
-                return res.status(404).json({ message: "Assignment not found" });
-            }
+	},
+	deleteAssignment: async (req, res) => {
+		try {
+			const assignmentId = req.params.id;
 
-            if (req.user._id.toString() !== assignment.teacher.toString()) {
-                return res.status(403).json({ message: "You are not authorized to delete this assignment" });
-            }
+			const assignment = await AssignmentModel.findById(assignmentId).lean();
+			if (!assignment) {
+				return res.status(404).json({ message: "Assignment not found" });
+			}
 
-            if (assignment.submissions && assignment.submissions.length > 0) {
-                return res.status(400).json({ message: "Cannot delete assignment with submissions" });
-            }
+			if (req.user._id.toString() !== assignment.teacher.toString()) {
+				return res.status(403).json({ message: "You are not authorized to delete this assignment" });
+			}
 
-            await Promise.all([
-                ClassModel.updateOne(
-                    { _id: assignment.class_id },
-                    { $pull: { assignments: assignmentId } }
-                ),
-                ClassPost.deleteOne({ assignment: assignmentId }),
-                StudentModel.updateMany(
-                    { _id: { $in: assignment.students } },
-                    { $pull: { assignments: assignmentId } }
-                ),
-                TeacherModel.updateOne(
-                    { _id: assignment.teacher },
-                    { $pull: { assignments: assignmentId } }
-                )
-            ]);
+			if (assignment.submissions && assignment.submissions.length > 0) {
+				return res.status(400).json({ message: "Cannot delete assignment with submissions" });
+			}
 
-            await AssignmentModel.deleteOne({ _id: assignmentId });
+			await Promise.all([
+				ClassModel.updateOne(
+					{ _id: assignment.class_id },
+					{ $pull: { assignments: assignmentId } }
+				),
+				ClassPost.deleteOne({ assignment: assignmentId }),
+				StudentModel.updateMany(
+					{ _id: { $in: assignment.students } },
+					{ $pull: { assignments: assignmentId } }
+				),
+				TeacherModel.updateOne(
+					{ _id: assignment.teacher },
+					{ $pull: { assignments: assignmentId } }
+				)
+			]);
 
-            return res.status(200).json({ message: "Assignment deleted successfully" });
+			await AssignmentModel.deleteOne({ _id: assignmentId });
 
-        } catch (error) {
-            console.error("Error deleting assignment:", error);
-            return res.status(500).json({ error: error.message });
-        }
-    },
+			return res.status(200).json({ message: "Assignment deleted successfully" });
 
-    getAssignmentByClass: async (req, res) => {
-        try {
-            const classId = req.params.classId;
-            const assignments = await AssignmentModel.find({ class: classId }).populate([
-                {
-                    path: "teacher",
-                    select: '_id name email avatar_url'
-                },
-                {
-                    path: "class",
-                    select: 'class_name class_code'
-                },
-                {
-                    path: "students",
-                    select: '_id name email avatar_url'
-                },
-                {
-                    path: 'submissions',
-                }
-            ]);
-            res.status(200).json(assignments);
-        } catch (error) {
-            console.error("Error fetching assignments by class:", error);
-            res.status(500).json({ error: error.message });
-        }
-    },
-    getAssignmentOfUser: async (req, res) => {
-        try {
-            const userId = req.params.userId;
-            const assignments = await AssignmentModel.find({
-                $or: [
-                    { students: userId },
-                    { teacher: userId }
-                ]
-            }).populate([
-                {
-                    path: "class",
-                    select: 'name code'
-                },
-                {
-                    path: "submissions",
-                    select: '_id student score feedback',
-                }
-            ]);
-            res.status(200).json(assignments);
-        } catch (error) {
-            console.error("Error fetching assignments for user:", error);
-            res.status(500).json({ error: error.message });
-        }
-    },
-    getAssignmentById: async (req, res) => {
-        try {
-            const assignmentId = req.params.id;
-            const assignment = await AssignmentModel.findById(assignmentId).populate([
-                {
-                    path: 'submissions',
-                    populate: {
-                        path: 'student',
-                        select: '_id name email avatar_url'
-                    }
-                },
-                {
-                    path: "teacher",
-                    select: '_id name email avatar_url'
-                },
-                {
-                    path: 'class',
-                    select: 'class_name class_code'
-                }
-            ])
-            if (!assignment) {
-                return res.status(404).json({ message: "Assignment not found" });
-            }
-            res.status(200).json(assignment);
-        } catch (error) {
-            console.error("Error fetching assignment by ID:", error);
-            res.status(500).json({ error: error.message });
-        }
-    },
-    addSubmission: async (req, res) => {
-        try {
-            const assignmentId = req.params.id;
-            const student_id = req.user._id;
-            const assignment = await AssignmentModel.findById(assignmentId);
+		} catch (error) {
+			console.error("Error deleting assignment:", error);
+			return res.status(500).json({ error: error.message });
+		}
+	},
 
-            const submission = await SubmissionModel.create({
-                assignment: assignmentId,
-                student: student_id,
-                ...req.body
-            });
+	getAssignmentByClass: async (req, res) => {
+		try {
+			const classId = req.params.classId;
+			const assignments = await AssignmentModel.find({ class: classId }).populate([
+				{
+					path: "teacher",
+					select: '_id name email avatar_url'
+				},
+				{
+					path: "class",
+					select: 'class_name class_code'
+				},
+				{
+					path: "students",
+					select: '_id name email avatar_url'
+				},
+				{
+					path: 'submissions',
+				}
+			]);
+			res.status(200).json(assignments);
+		} catch (error) {
+			console.error("Error fetching assignments by class:", error);
+			res.status(500).json({ error: error.message });
+		}
+	},
+	getAssignmentOfUser: async (req, res) => {
+		try {
+			const userId = req.params.userId;
+			const assignments = await AssignmentModel.find({
+				$or: [
+					{ students: userId },
+					{ teacher: userId }
+				]
+			}).populate([
+				{
+					path: "class",
+					select: 'class_name class_code'
+				},
+				{
+					path: "submissions",
+					select: '_id student score feedback',
+				}
+			]);
+			res.status(200).json(assignments);
+		} catch (error) {
+			console.error("Error fetching assignments for user:", error);
+			res.status(500).json({ error: error.message });
+		}
+	},
+	getAssignmentById: async (req, res) => {
+		try {
+			const assignmentId = req.params.id;
+			const assignment = await AssignmentModel.findById(assignmentId).populate([
+				{
+					path: 'submissions',
+					populate: {
+						path: 'student',
+						select: '_id name email avatar_url'
+					}
+				},
+				{
+					path: "teacher",
+					select: '_id name email avatar_url'
+				},
+				{
+					path: 'class',
+					select: 'class_name class_code'
+				}
+			])
+			if (!assignment) {
+				return res.status(404).json({ message: "Assignment not found" });
+			}
+			res.status(200).json(assignment);
+		} catch (error) {
+			console.error("Error fetching assignment by ID:", error);
+			res.status(500).json({ error: error.message });
+		}
+	},
+	addSubmission: async (req, res) => {
+		try {
+			const assignmentId = req.params.id;
+			const student_id = req.user._id;
+			const assignment = await AssignmentModel.findById(assignmentId);
 
-            assignment.submissions.push(submission._id);
-            await assignment.save()
+			const submission = await SubmissionModel.create({
+				assignment: assignmentId,
+				student: student_id,
+				...req.body
+			});
 
-            res.status(200).json(assignment);
+			assignment.submissions.push(submission._id);
+			await assignment.save()
 
-        } catch (error) {
-            console.error("Error adding submission:", error);
-            res.status(500).json(error);
-        }
-    },
-    gradeSubmission: async (req, res) => {
-        try {
-            const submissionId = req.params.id;
-            const { score, feedback } = req.body;
-            const submission = await SubmissionModel.findById(submissionId);
+			res.status(200).json(assignment);
 
-            submission.score = score;
-            submission.feedback = feedback;
+		} catch (error) {
+			console.error("Error adding submission:", error);
+			res.status(500).json(error);
+		}
+	},
+	gradeSubmission: async (req, res) => {
+		try {
+			const submissionId = req.params.id;
+			const { score, feedback } = req.body;
+			const submission = await SubmissionModel.findById(submissionId);
 
-            await submission.save();
+			submission.score = score;
+			submission.feedback = feedback;
 
-            res.status(200).json(submission);
-        } catch (error) {
-            console.error("Error grading submission:", error);
-            res.status(500).json({ error: error.message });
-        }
-    }
+			await submission.save();
+
+			res.status(200).json(submission);
+		} catch (error) {
+			console.error("Error grading submission:", error);
+			res.status(500).json({ error: error.message });
+		}
+	}
 };
 
 module.exports = assignmentController;
