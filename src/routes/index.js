@@ -9,6 +9,7 @@ const uploadRoutes = require('./upload.route')
 const teacherRoutes = require('./teacher.route')
 const billingRoutes = require('./bill.route')
 const assignmentRoutes = require('./assignment.route')
+const class_postRoutes = require('./class_post.route')
 
 const router = express.Router()
 
@@ -22,5 +23,6 @@ router.use(uploadRoutes)
 router.use(teacherRoutes)
 router.use(billingRoutes)
 router.use(assignmentRoutes)
+router.use(class_postRoutes)
 
 module.exports = router

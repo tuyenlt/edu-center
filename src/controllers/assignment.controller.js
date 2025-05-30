@@ -58,12 +58,6 @@ const assignmentController = {
 					link: `/class/${assignment.class}`,
 				})
 
-				// Send notification to all students in the assignment
-				await User.updateMany(
-					{ _id: { $in: assignment.students } },
-					{ $push: { notifications: notification._id } }
-				)
-
 				for (const studentId of assignment.students) {
 					webSocketService.sendUserNotification(studentId, notification);
 				}

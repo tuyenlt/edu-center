@@ -128,33 +128,13 @@ const webSocketService = {
 				console.error('error creating new class post comment:', error);
 			}
 		});
-
-
-		socket.on('classPostCreate', async (data) => {
-			try {
-				const newPost = await ClassPost.create({
-					...data,
-				});
-				const classObj = await ClassModel.findById(data.classId);
-				classObj.class_posts.push(newPost._id);
-				await classObj.save();
-
-				const populatedClassPost = await newPost.populate({
-					path: "author",
-					select: "_id name email avatar_url"
-				})
-				this.io.to(data.classId).emit('classPostCreate', populatedClassPost);
-			} catch (error) {
-				console.error("error creating new class post:", error);
-			}
-		})
 	},
 	sendUserNotification(userId, notification) {
 		this.sockets.forEach(socket => {
 			if (socket.user._id.toString() === userId.toString()) {
 				socket.emit('notification', notification);
+				console.log(`Sending notification to ${socket.user.name}:`, notification);
 			}
-			console.log(`Sending notification to ${socket.user.name}:`, notification);
 		});
 	}
 }
