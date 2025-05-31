@@ -12,6 +12,11 @@ const apiCors = cors({
 		if (origin.includes("http://localhost")) {
 			return callback(null, true);
 		}
+
+		if (allowedList.includes(origin)) {
+			return callback(null, true);
+		}
+
 		const allowedRegex = /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/;
 
 		if (allowedRegex.test(origin)) {
@@ -33,6 +38,10 @@ const socketCors = {
 			return callback(null, true);
 		}
 		const allowedRegex = /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/;
+
+		if (allowedList.includes(origin)) {
+			return callback(null, true);
+		}
 
 		if (allowedRegex.test(origin)) {
 			callback(null, true);
