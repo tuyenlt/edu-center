@@ -2,6 +2,7 @@ const CourseModel = require('../models/course.model')
 const NotifyModel = require('../models/notify.model')
 const StudentModel = require('../models/student.model')
 const User = require('../models/user.model')
+const webSocketService = require('../services/webSocket.service')
 
 const courseController = {
 	getAllCourses: async (req, res) => {

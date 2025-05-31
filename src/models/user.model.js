@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		trim: true,
 		validate(value) {
-			if (!validator.matches(value, /^[A-Za-z\s]+$/)) {
-				throw new Error("Your name must contain letter only!")
+			if (!validator.matches(value, /^[\p{L}\s]+$/u)) {
+				throw new Error("Your name must contain letters and spaces only!");
 			}
 		}
 	},

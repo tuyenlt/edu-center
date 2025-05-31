@@ -9,6 +9,7 @@ const ClassPost = require('../models/classPost.model');
 const webSocketService = require('../services/webSocket.service');
 const BillModel = require('../models/bill.model');
 const NotifyModel = require('../models/notify.model');
+const CourseModel = require('../models/course.model');
 
 const classController = {
 	/**
@@ -354,6 +355,7 @@ const classController = {
 			if (!users || users.length === 0) {
 				return res.status(404).json({ message: "No users found" });
 			}
+			const course = await CourseModel.findById(classDoc.course._id);
 			users.forEach(async (user) => {
 				if (user.role === 'student') {
 					if (classDoc.students.includes(user._id)) {
@@ -361,6 +363,12 @@ const classController = {
 					}
 					classDoc.students.push(user._id);
 					user.enrolled_classes.push(classDoc._id);
+
+					// remove the user requested from course
+					if (course.requested_students.includes(user._id)) {
+						course.requested_students = course.requested_students.filter(studentId => studentId.toString() !== user._id.toString());
+					}
+
 					const bill = await BillModel.create({
 						user: user._id,
 						amount: classDoc.course.price,
@@ -381,6 +389,7 @@ const classController = {
 				}
 				await user.save();
 			})
+			await course.save();
 			await classDoc.save();
 			res.status(200).json("added user to class");
 		} catch (error) {

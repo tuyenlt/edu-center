@@ -43,7 +43,7 @@ const classPostController = {
 				return res.status(403).json({ message: 'You are not authorized to create a class post' });
 			}
 
-			const classPost = new ClassPost({
+			const classPost = await ClassPost.create({
 				classId,
 				title,
 				content,
@@ -63,12 +63,26 @@ const classPostController = {
 
 			classDocument.class_posts.push(classPost._id);
 
+			const populatedClassPost = await classPost.populate([
+				{
+					path: 'author',
+					select: '_id name avatar_url'
+				},
+				{
+					path: 'comments.author',
+					select: '_id name avatar_url'
+				},
+				{
+					path: 'assignment',
+					select: '_id title description due_date'
+				}
+			])
 
-			webSocketService.io.to(classId).emit('classPostCreate', classPost); // Emit the new class post to the class room
+			webSocketService.io.to(classId).emit('classPostCreate', populatedClassPost); // Emit the new class post to the class room
 			await classDocument.save();
-			await classPost.save();
 			res.status(201).json(classPost);
 		} catch (error) {
+			console.error('Error creating class post:', error);
 			res.status(500).json({ message: 'Error creating class post', error });
 		}
 	},

@@ -175,9 +175,11 @@ const userController = {
 		try {
 			const BaseModel = resolveUserModel(req.body.role);
 			const user = new BaseModel(req.body);
+			let accessToken;
 			if (!req.query.nologin) {
+				console.log("Registering user:", user);
 				const payload = { _id: user._id, role: user.role };
-				const accessToken = await generateAccessToken(payload);
+				accessToken = await generateAccessToken(payload);
 				const refreshToken = await generateRefreshToken(payload);
 				res.cookie('refreshToken', refreshToken, cookieOptions)
 			}
@@ -197,11 +199,11 @@ const userController = {
 				option = { role: userRole }
 			}
 			const usersList = await User.find(option);
-			res.status(200).json(usersList.map((user) => ({
-				...user,
+			const response = usersList.map((user) => ({
+				...user.toObject(),
 				online: webSocketService.checkOnline(user._id),
-			})));
-
+			}))
+			res.status(200).json(response);
 		} catch (error) {
 			console.error("Get users list error:", error);
 			res.status(500).json({ error: "Internal server error" });
