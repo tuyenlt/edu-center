@@ -58,8 +58,9 @@ const assignmentController = {
 					link: `/class/${assignment.class}`,
 				})
 
-				for (const studentId of assignment.students) {
-					webSocketService.sendUserNotification(studentId, notification);
+				// send notification to users by websocket
+				for (const userId of notification.users) {
+					webSocketService.sendUserNotification(userId, notification);
 				}
 
 				webSocketService.io.to(assignment.class.toString()).emit('classPostCreate', classPost);

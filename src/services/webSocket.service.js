@@ -58,28 +58,29 @@ const webSocketService = {
 								link: `/chat/${roomId}`,
 							};
 
+							const identifier = `${roomId}-${socket.user._id}`;
+
 							let notifyDoc = await NotifyModel.findOne({
-								type: notification.type,
-								link: notification.link,
-								users: userId,
+								identifier: identifier,
 							});
 
 							if (notifyDoc) {
-								notifyDoc.updatedAt = new Date();
-								await notifyDoc.save();
+								await notifyDoc.updateOne({
+									$set: {
+										title: notification.title,
+										content: notification.content,
+									}
+								});
 							} else {
 								notifyDoc = await NotifyModel.create({
 									...notification,
+									identifier: identifier,
 									users: [userId]
 								});
-								await User.findByIdAndUpdate(userId, {
-									$push: {
-										notifies: {
-											notify: notifyDoc._id,
-											is_seen: false
-										}
-									}
-								});
+							}
+							// send notification to users by websocket
+							for (const userId of notifyDoc.users) {
+								webSocketService.sendUserNotification(userId, notifyDoc);
 							}
 						}
 					}
@@ -136,6 +137,9 @@ const webSocketService = {
 				console.log(`Sending notification to ${socket.user.name}:`, notification);
 			}
 		});
+	},
+	checkOnline(userId) {
+		return this.sockets.some(socket => socket.user._id.toString() === userId.toString());
 	}
 }
 

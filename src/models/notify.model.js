@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const User = require('./user.model');
-
 const notifySchema = new mongoose.Schema({
 	users: [{
 		type: mongoose.Types.ObjectId,
@@ -42,10 +41,7 @@ notifySchema.post('save', async function (doc) {
 				{ _id: { $in: doc.users } },
 				{
 					$push: {
-						notifies: {
-							notify: doc._id,
-							is_seen: false
-						}
+						notifies: doc._id
 					}
 				}
 			);
@@ -55,11 +51,21 @@ notifySchema.post('save', async function (doc) {
 	}
 });
 
+
+async function cleanupNotify(notifyDoc) {
+	if (!notifyDoc || !notifyDoc.users) return;
+	await User.updateMany(
+		{ _id: { $in: notifyDoc.users } },
+		{ $pull: { notifies: notifyDoc._id } }
+	);
+}
+
+
 notifySchema.pre('remove', async function (next) {
 	try {
 		await User.updateMany(
 			{ _id: { $in: doc.users } },
-			{ $pull: { notifies: { notify: this._id } } }
+			{ $pull: { notifies: this._id } }
 		);
 		next();
 	} catch (error) {
@@ -67,6 +73,37 @@ notifySchema.pre('remove', async function (next) {
 		next(error);
 	}
 })
+
+
+notifySchema.pre(['findOneAndDelete', 'findOneAndRemove'], async function (next) {
+	try {
+		const doc = await this.model.findOne(this.getQuery());
+		if (doc) await cleanupNotify(doc);
+		next();
+	} catch (err) {
+		next(err);
+	}
+});
+
+notifySchema.pre('deleteOne', { document: false, query: true }, async function (next) {
+	try {
+		const doc = await this.model.findOne(this.getQuery());
+		if (doc) await cleanupNotify(doc);
+		next();
+	} catch (err) {
+		next(err);
+	}
+});
+
+notifySchema.pre('deleteMany', { document: false, query: true }, async function (next) {
+	try {
+		const docs = await this.model.find(this.getQuery());
+		await Promise.all(docs.map(cleanupNotify));
+		next();
+	} catch (err) {
+		next(err);
+	}
+});
 
 
 const NotifyModel = mongoose.model('notifies', notifySchema)

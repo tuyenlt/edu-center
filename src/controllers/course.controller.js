@@ -118,7 +118,7 @@ const courseController = {
 
 				const managers = await User.find({ role: 'manager' });
 
-				await NotifyModel.create({
+				const notification = await NotifyModel.create({
 					title: `New student request to ${course.name}`,
 					content: `${student.name} has requested to join the course ${course.name}`,
 					type: 'course_request',
@@ -126,6 +126,11 @@ const courseController = {
 					users: managers.map(m => m._id),
 					identifier
 				});
+
+				// send notification to users by websocket
+				for (const userId of notification.users) {
+					webSocketService.sendUserNotification(userId, notification);
+				}
 			}
 
 			await course.save();

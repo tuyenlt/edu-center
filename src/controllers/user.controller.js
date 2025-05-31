@@ -2,6 +2,8 @@ const User = require('../models/user.model');
 const resolveUserModel = require('../utils/resolveUserModel');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../services/jwt.service');
 const valkeyClient = require('../configs/valkey');
+const NotifyModel = require('../models/notify.model');
+const webSocketService = require('../services/webSocket.service');
 
 const cookieOptions = {
 	httpOnly: true, // Prevent JavaScript access
@@ -195,7 +197,10 @@ const userController = {
 				option = { role: userRole }
 			}
 			const usersList = await User.find(option);
-			res.status(200).json(usersList);
+			res.status(200).json(usersList.map((user) => ({
+				...user,
+				online: webSocketService.checkOnline(user._id),
+			})));
 
 		} catch (error) {
 			console.error("Get users list error:", error);
@@ -287,7 +292,7 @@ const userController = {
 	getUserNotifies: async (req, res) => {
 		try {
 			const user = await User.findById(req.params.id).populate({
-				path: "notifies.notify",
+				path: "notifies",
 			})
 
 			if (!user) {
@@ -295,9 +300,9 @@ const userController = {
 			}
 
 			const notifies = user.notifies.map(notify => ({
-				notify: notify.notify,
-				is_seen: notify.is_seen
-			}));
+				notify,
+				is_seen: notify.seen.includes(user._id) ? true : false
+			}))
 
 			res.status(200).json(notifies);
 
@@ -305,7 +310,29 @@ const userController = {
 			console.error("Get user notifies error:", error);
 			res.status(500).json({ error: "Internal server error" });
 		}
-	}
+	},
+
+	readNotify: async (req, res) => {
+		try {
+			const userId = req.user._id;
+			const notifyId = req.params.id;
+			if (!userId || !notifyId) {
+				return res.status(400).json({ error: "User ID and notify ID are required" });
+			}
+
+			await NotifyModel.updateOne({
+				_id: notifyId,
+				seen: { $ne: userId }
+			}, {
+				$push: { seen: userId }
+			})
+
+			res.status(200).json({ message: "Notify marked as read" });
+		} catch (error) {
+			console.error("Read notify error:", error);
+			res.status(500).json({ error: "Internal server error" });
+		}
+	},
 };
 
 module.exports = userController;

@@ -372,8 +372,10 @@ const classController = {
 					await bill.save();
 				} else if (user.role === 'teacher') {
 					if (classDoc.teachers.includes(user._id)) {
-						return res.status(403).json({ message: "This class already has a teacher" });
+						return res.status(403).json({ message: "Teacher already in class" });
 					}
+					// check if the teacher had schedule conflict with the class
+
 					classDoc.teachers.push(user._id);
 					user.enrolled_classes.push(classDoc._id);
 				}
@@ -435,7 +437,7 @@ const classController = {
 			});
 
 			const notification = await NotifyModel.create({
-				user: classObj.students,
+				users: classObj.students,
 				type: 'post',
 				title: `${user.name} add new post in class ${classObj.class_name}`,
 				content: `${post.content}`,
@@ -446,6 +448,11 @@ const classController = {
 				{ _id: { $in: classObj.students } },
 				{ $push: { notifies: notification._id } }
 			)
+
+			// send notification to users by websocket
+			for (const userId of notification.users) {
+				webSocketService.sendUserNotification(userId, notification);
+			}
 
 			classObj.posts.push(post._id);
 			await classObj.save();
