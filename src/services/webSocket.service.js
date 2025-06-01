@@ -50,7 +50,7 @@ const webSocketService = {
 				for (const userId of receivers) {
 					if (userId.toString() !== socket.user._id.toString()) {
 						const userSocket = this.sockets.find(s => s.user._id.toString() === userId.toString());
-						if (!userSocket) {
+						if (!userSocket || !userSocket.rooms.has(roomId)) {
 							const notification = {
 								title: `${socket.user.name} sent a message`,
 								content: message,

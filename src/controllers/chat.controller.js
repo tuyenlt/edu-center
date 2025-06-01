@@ -52,7 +52,7 @@ const chatController = {
 					type: "contact_chat_created",
 					link: `/chat/${chatroom._id}`,
 					identifier: `contact-chat-${chatroom._id}`,
-					users: [staff.map(user => user._id)]
+					users: staff.map(staff => staff._id)
 				});
 			}
 
