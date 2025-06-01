@@ -42,9 +42,9 @@ const chatController = {
 			})
 			await chatroom.save()
 
+			const user = await User.findById(req.user._id);
 			if (chatroom.type === "contact") {
 				// send notification to staff
-				const user = await User.findById(req.user._id);
 				const staff = await User.find({ role: "staff" });
 				await NotifyModel.create({
 					title: `${user.name} created a new contact chat`,
@@ -56,9 +56,9 @@ const chatController = {
 				});
 			}
 
-			const user = await User.findById(req.user._id);
 			user.chatrooms.push(chatroom._id);
 			await user.save();
+			console.log("Chatroom created successfully", chatroom.type);
 			return res.send(chatroom)
 		} catch (e) {
 			console.error(e);
