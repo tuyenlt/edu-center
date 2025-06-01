@@ -5,6 +5,9 @@ const allowedList = [
 	"http://tmsherk.id.vn",
 	"http://api.tmsherk.id.vn",
 	"http://englishnest.click",
+	"http://api.englishnest.click",
+	"https://englishnest.click",
+	"https://api.englishnest.click",
 ]
 
 const apiCors = cors({
