@@ -3,6 +3,8 @@ const cors = require('cors')
 const allowedList = [
 	"http://localhost:5173",
 	"http://tmsherk.id.vn",
+	"http://api.tmsherk.id.vn",
+	"http://englishnest.click",
 ]
 
 const apiCors = cors({
