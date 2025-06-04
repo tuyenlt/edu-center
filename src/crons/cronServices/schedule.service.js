@@ -1,7 +1,6 @@
 const ClassSessionModel = require("../../models/class_session.model");
 const NotifyModel = require("../../models/notify.model");
 
-
 const scheduleService = {
 	getUpcomingSessionsNotifies: async () => {
 		try {
@@ -18,22 +17,20 @@ const scheduleService = {
 				}
 			]);
 
-			const notifications = [];
-			for (const session of upcomingSessions) {
-				const notify = await NotifyModel.create({
+			const notifications = await Promise.all(upcomingSessions.map(session =>
+				NotifyModel.create({
 					title: `Upcoming Session: ${session.title}`,
-					content: `Your session "${session.title}" is starting soon.`,
+					content: `Your session "${session.title}" in room ${session.room} is starting soon.`,
 					type: "upcoming_session",
-					link: `/class/${session.class_id._id}`,
-					users: [...session.class_id.students, ...session.class_id.teachers]
+					link: `/class/${session.class_id?._id}`,
+					users: [...(session.class_id?.students || []), ...(session.class_id?.teachers || [])]
 				})
-				notifications.push(notify);
-			}
+			));
 
-			upcomingSessions.forEach(async (session) => {
+			await Promise.all(upcomingSessions.map(async (session) => {
 				session.notified = true;
 				await session.save();
-			});
+			}));
 
 			return notifications;
 		} catch (error) {
@@ -41,6 +38,6 @@ const scheduleService = {
 			return [];
 		}
 	}
-}
+};
 
 module.exports = scheduleService;

@@ -10,6 +10,7 @@ const webSocketService = require('../services/webSocket.service');
 const BillModel = require('../models/bill.model');
 const NotifyModel = require('../models/notify.model');
 const CourseModel = require('../models/course.model');
+const userScheduleService = require('../services/userSchedule.service');
 
 const classController = {
 	/**
@@ -383,7 +384,10 @@ const classController = {
 						return res.status(403).json({ message: "Teacher already in class" });
 					}
 					// check if the teacher had schedule conflict with the class
-
+					const hasConflict = await userScheduleService.checkConflictSchedule(user._id, classDoc.class_sessions);
+					if (hasConflict) {
+						return res.status(403).json({ message: "Teacher has schedule conflict with this class" });
+					}
 					classDoc.teachers.push(user._id);
 					user.enrolled_classes.push(classDoc._id);
 				}
@@ -418,8 +422,13 @@ const classController = {
 				return res.status(403).json({ message: "Class is in progress" });
 			}
 
-			classDoc.students = classDoc.students.filter((user_id) => user_id.toString() !== req.body.user_id.toString());
-			classDoc.teachers = classDoc.teachers.filter((user_id) => user_id.toString() !== req.body.user_id.toString());
+			classDoc.students = classDoc.students.filter((_id) => _id.toString() !== user_id.toString());
+			classDoc.teachers = classDoc.teachers.filter((_id) => _id.toString() !== user_id.toString());
+
+			if (user.role === 'student') {
+				await BillModel.deleteOne({ user: user._id, course: classDoc.course, status: 'pending' });
+			}
+
 			await classDoc.save();
 			res.status(200).json("remove user success");
 		} catch (error) {

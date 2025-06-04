@@ -161,7 +161,7 @@ const assignmentController = {
 				{
 					path: 'submissions',
 				}
-			]);
+			]).sort({ due_date: -1 });
 			res.status(200).json(assignments);
 		} catch (error) {
 			console.error("Error fetching assignments by class:", error);

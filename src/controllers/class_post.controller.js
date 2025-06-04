@@ -126,9 +126,15 @@ const classPostController = {
 			}
 
 			// Check if the user is the author of the class post
-			if (classPost.authorId.toString() !== req.user._id.toString()) {
-				return res.status(403).json({ message: 'You are not authorized to delete this class post' });
-			}
+			// if (classPost.author.toString() !== req.user._id.toString()) {
+			// 	return res.status(403).json({ message: 'You are not authorized to delete this class post' });
+			// }
+
+			const classDocument = await ClassModel.findById(classPost.classId);
+
+			await classDocument.updateOne(
+				{ $pull: { class_posts: classPostId } }
+			);
 
 			await classPost.deleteOne();
 
