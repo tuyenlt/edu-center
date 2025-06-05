@@ -242,7 +242,6 @@ const classController = {
 		try {
 			const user = await UserModel.findById(req.params.id).populate({
 				path: 'enrolled_classes',
-				match: { status: { $ne: 'finished' } },
 				populate: [
 					{
 						path: 'teachers',
