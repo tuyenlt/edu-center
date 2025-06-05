@@ -43,7 +43,6 @@ const CourseSchema = new mongoose.Schema({
 	},
 	img_url: {
 		type: String,
-		required: true
 	},
 	course_programs: [
 		{
